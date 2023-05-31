@@ -1,6 +1,6 @@
 # Taskfun
 
-Preemptive multitasking for hobbyists for Arduino AVR and SAMD21. Just `#include "Taskfun.h"` and use `runTask()` to start a task. Use SyncVar class to add synchronous access to a shared variable. Below is a standard Arduino blink example implemented as two independed tasks and a synchronization variable.
+Preemptive multitasking for hobbyists for Arduino AVR and SAMD21. Just `#include "Taskfun.h"` and use `runTask()` to start a task. Use `SyncVar<>` class to add synchronous access to a shared variable. Below is a standard Arduino blink example implemented as two independed tasks and a synchronization variable.
 
 ```
 #include "Taskfun.h"
@@ -139,3 +139,17 @@ If you want to stop a task use `killTask()` function which takes task id as a pa
 void killTask(int id);
 ```
 A task can stop other tasks or can stop itself. In case a task calls `killTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped using `killTask()` or naturally exits the task function or method the task memory including the stack is freed but the task list does not shrink.
+
+# SyncVar<>
+When two tasks access a global(shared) variable access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
+```
+// synchronized counter
+SyncVar<int> _counter;
+
+// synchronized linked list
+template<typename T>
+struct ListNode {
+  SyncVar<T> value;
+  SyncVar<ListNode*> _next;
+}
+```
