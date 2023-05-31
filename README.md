@@ -15,10 +15,10 @@ SyncVar<bool> _on;
 // strongly typed argument
 void On(int) {
   while (1) {
-    if (_on) {
+    if (_on) { // overloaded operator disables interrupts before reading value
       digitalWrite(LED_BUILTIN, HIGH);
       delay(1000);
-      _on = false;
+      _on = false; // overloaded operator disables interrupts before assigning value
     }
   }
 }
