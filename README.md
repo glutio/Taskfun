@@ -117,7 +117,7 @@ void setup() {
   interrupts(); // enable task switching
 }
 ```
-# delay() and yield()
+## delay() and yield()
 To implement a timer task you can use Arduino's `delay()` function. Here is a simple timer that triggers every second:
 ```
 void timerTask() {
@@ -133,14 +133,14 @@ void loop() {
 ```
 Internally the implementation of `delay()` calls `yield()` which initiates task switching, so a task that is waiting in a `delay()` is not using the CPU. You can call `yield()` whenever you want to initiate a task switch, typically when a task does something and then waits for the next cycle.
 
-# killTask()
+## killTask()
 If you want to stop a task use `killTask()` function which takes task id as a parameter.
 ```
 void killTask(int id);
 ```
 A task can stop other tasks or can stop itself. In case a task calls `killTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped using `killTask()` or naturally exits the task function or method the task memory including the stack is freed but the task list does not shrink.
 
-# SyncVar<>
+## SyncVar<>
 When two tasks access a global(shared) variable, access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
 ```
 // synchronized counter
