@@ -141,7 +141,7 @@ void killTask(int id);
 A task can stop other tasks or can stop itself. In case a task calls `killTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped using `killTask()` or naturally exits the task function or method the task memory including the stack is freed but the task list does not shrink.
 
 # SyncVar<>
-When two tasks access a global(shared) variable access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
+When two tasks access a global(shared) variable, access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
 ```
 // synchronized counter
 SyncVar<int> _counter;
