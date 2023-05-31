@@ -52,7 +52,7 @@ Before tasks can be created the library needs to be initialized by calling `setu
 ```
 void setupTasks(int numTasks = 3, int msSlice = 1);
 ```
-`numTasks` - number of tasks to initialize the internal task list with. The list will automatically grow (but not shrink) if you add more tasks, but that involves allocating new memory for a bigger list and copying the old list to the new one. Try to avoid this by specifying the expected number of tasks.
+`numTasks` - number of tasks to initialize the internal task list with (+1 for the main `loop()`). The list will automatically grow (but not shrink) if you add more tasks, but that involves allocating new memory for a bigger list and copying the old list to the new one. Try to avoid this by specifying the expected number of tasks.
 
 `msSlice` - number milliseconds in a time slice. How long to allow a task to run before automatically switching to a different task (if there are any other tasks).
 
@@ -86,7 +86,7 @@ int runTask(const T* instance, void (T::*task)(U arg), unsigned stackSize = 128 
 ```
 The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method.
 
-Returns `int` - created task id. Use this with `killTask()` if needed.
+Returns `int` - created task id. Use this with `killTask()` to stop a task. The main `loop()` task has id 0 and cannot be stopped.
 
 `arg` - argument to pass to the task.
 
