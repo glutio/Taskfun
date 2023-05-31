@@ -1,6 +1,8 @@
+Taskfun.h - A library for multitasking on Arduino AVR and SAMD21
+
 MIT License
 
-Copyright (c) 2023 glutio
+Copyright (c) 2023 Eugene Pistrak
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
