@@ -146,7 +146,7 @@ When two tasks access a global(shared) variable, access needs to be synchronized
 // synchronized counter
 SyncVar<int> _counter;
 
-// synchronized linked list ndde
+// synchronized linked list node
 template<typename T>
 struct ListNode {
   SyncVar<T> _value;
