@@ -113,6 +113,8 @@ void setup() {
   
   // run method task
   runTask(&program, &Program::myTaskMethod, 0 /* unused arg */);
+  
+  interrupts(); // enable task switching
 }
 ```
 # delay() and yield()
