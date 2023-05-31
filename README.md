@@ -1,6 +1,10 @@
 # Taskfun
 
-Preemptive multitasking for hobbyists for Arduino AVR and SAMD21. Just `#include "Taskfun.h"` and use `runTask()` to start a task. Use `SyncVar<>` class to add synchronous access to a shared variable. Below is a standard Arduino blink example implemented as two independed tasks and a synchronization variable.
+Taskfun is a library designed to introduce preemptive multitasking capabilities to your Arduino AVR and SAMD21 projects. Unlike cooperative multitasking, preemptive multitasking in Taskfun ensures automatic time-sharing between tasks, enhancing CPU utilization by allowing simultaneous execution of multiple tasks. Taskfun gives you the ability to run multiple operations concurrently, providing your Arduino with an extra layer of responsiveness.
+
+Taskfun is initialized with a simple `#include "Taskfun.h"`, and tasks can be run with the `runTask()` function. The library provides a `SyncVar<>` class for safe and synchronized access to shared variables across tasks.
+
+The primary advantage of using Taskfun is its ability to handle multiple operations concurrently without the risk of task monopolization. This is particularly useful for larger or more complex projects. Below is a standard Arduino blink example implemented as two independent tasks and a synchronization variable.
 
 ```
 #include "Taskfun.h"
@@ -138,7 +142,7 @@ If you want to stop a task use `killTask()` function which takes task id as a pa
 ```
 void killTask(int id);
 ```
-A task can stop other tasks or can stop itself. In case a running task calls `killTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped by using `killTask()` or by aturally exiting the task function or method the task memory, including the stack, is freed but the task list does not shrink.
+A task can stop other tasks or can stop itself. In case a running task calls `killTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped by using `killTask()` or by naturally exiting the task function or method the task memory, including the stack, is freed but the task list does not shrink.
 
 ## SyncVar<>
 When two tasks access a global(shared) variable, access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
