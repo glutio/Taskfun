@@ -16,7 +16,9 @@ struct TaskPriority {
 };
 
 template<typename T>
-int runTask(void (*task)(T arg), T arg, uint8_t priority = 1, unsigned stackSize = 640);
+int runTask(void (*task)(T arg), T arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+template<typename T, typename U>
+int runTask(const T* instance, void (T::*task)(U arg), unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
 void killTask(int id);
 void setupTasks(int numTasks = 3, int msSlice = 1);
 
@@ -101,7 +103,7 @@ protected:
   }
 
   template<typename T>
-  static int run_task(BTask<T> task, typename BTask<T>::ArgumentType arg, uint8_t priority, unsigned stackSize) {
+  static int run_task(BTask<T> task, typename BTask<T>::ArgumentType arg, unsigned stackSize, uint8_t priority) {
     BDisableInterrupts cli;
     if (!_initialized || priority > TaskPriority::Low || !stackSize) {
       return -1;
@@ -131,21 +133,28 @@ protected:
   }
 
   template<typename T>
-  friend int ::runTask(void (*task)(T arg), T arg, uint8_t, unsigned);
+  friend int ::runTask(void (*task)(T arg), T arg, unsigned, uint8_t);
+  template<typename T, typename U>
+  friend int ::runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority);
   friend void ::killTask(int);
   friend void ::setupTasks(int, int);
   friend void ::yield();
   template<typename T>
-  friend class BSync;
-  friend class BDisableInterrupts;
+  friend class SyncVar;
+
   __BTASKSWITCHER_ARCH_CLASS__
 };
 
 }
 
 template<typename T>
-int runTask(void (*task)(T arg), T arg, uint8_t priority, unsigned stackSize) {
-  Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(task), arg, priority, stackSize);
+int runTask(void (*task)(T arg), T arg, unsigned stackSize, uint8_t priority) {
+  Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(task), arg, stackSize, priority);
+}
+
+template<typename T, typename U>
+int runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority) {
+  Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(instance, task), arg, stackSize, priority);
 }
 
 #endif
