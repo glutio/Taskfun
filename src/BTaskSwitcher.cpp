@@ -12,7 +12,7 @@ volatile int BTaskSwitcher::_next_task = 0;
 volatile int BTaskSwitcher::_yielded_task = -1;
 int BTaskSwitcher::_slice = 1;
 volatile int BTaskSwitcher::_current_slice = 0;
-BTaskSwitcher::BSwitchState BTaskSwitcher::_pri[3] = { 0 };
+BTaskSwitcher::BSwitchState BTaskSwitcher::_pri[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
 
 
 BTaskSwitcher::BDisableInterrupts::BDisableInterrupts() {
@@ -42,7 +42,7 @@ void BTaskSwitcher::free_task(int id) {
 
 void BTaskSwitcher::kill_task(int id) {
   auto cli = disable();
-  if (id > 0 && id < _tasks.Length() && _tasks[id] && _tasks[id]->id > 0) {
+  if (id > 0 && id < (int)_tasks.Length() && _tasks[id] && _tasks[id]->id > 0) {
     --_pri[_tasks[id]->priority].count;
 
     if (id == _current_task) {
@@ -59,19 +59,19 @@ void BTaskSwitcher::kill_task(int id) {
 }
 
 int BTaskSwitcher::get_next_task() {
-  const int high = 50;        //62;
-  const int med = high + 33;  //24
-  const int low = 100;
+  const unsigned high = 50;        //62;
+  const unsigned med = high + 33;  //24
+  //const unsigned low = 100;
 
-  auto dice = rand() % 100;
+  unsigned dice = rand() % 100;
 
-  int pri = 0;
+  unsigned pri = 0;
   if (dice < high) pri = TaskPriority::High;
   else if (dice < med) pri = TaskPriority::Medium;
   else pri = TaskPriority::Low;
 
   if (!_pri[pri].count || (_pri[pri].count == 1 && _pri[pri].current == _yielded_task)) {
-    const auto len = sizeof(_pri) / sizeof(_pri[0]);
+    const int len = sizeof(_pri) / sizeof(_pri[0]);
     int i;
     for (i = pri + 1; i < len; ++i) {
       if (_pri[i].count) break;
@@ -92,7 +92,7 @@ int BTaskSwitcher::get_next_task() {
   auto next_task = _pri[pri].current;
   do {
     ++next_task;
-    if (next_task >= _tasks.Length()) {
+    if (next_task >= (int)_tasks.Length()) {
       next_task = 0;
     }
   } while (next_task != _pri[pri].current && (next_task == _yielded_task || !_tasks[next_task] || _tasks[next_task]->id < 0 || _tasks[next_task]->priority != pri));

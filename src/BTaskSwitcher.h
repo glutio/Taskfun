@@ -53,7 +53,7 @@ protected:
 
   struct BSwitchState {
     int current;
-    int count;
+    unsigned count;
   };
 
   typedef void (*BTaskWrapper)(BTaskInfoBase*);
@@ -109,7 +109,7 @@ protected:
       return -1;
     }
 
-    auto new_task = 0;
+    unsigned new_task = 0;
     while (new_task < _tasks.Length() && _tasks[new_task]) {
       ++new_task;
     }
@@ -149,12 +149,12 @@ protected:
 
 template<typename T>
 int runTask(void (*task)(T arg), T arg, unsigned stackSize, uint8_t priority) {
-  Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(task), arg, stackSize, priority);
+  return Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(task), arg, stackSize, priority);
 }
 
 template<typename T, typename U>
 int runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority) {
-  Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(instance, task), arg, stackSize, priority);
+  return Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(instance, task), arg, stackSize, priority);
 }
 
 #endif

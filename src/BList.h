@@ -12,10 +12,10 @@ protected:
 
 public:
   BList(uint16_t capacity)
-    : _capacity(capacity), _count(0), _array(new T[capacity]) {}
+    : _array(new T[capacity]), _count(0), _capacity(capacity)  {}
 
   BList()
-    : _capacity(0), _count(0), _array(0) {}
+    : _array(0), _count(0), _capacity(0) {}
 
   ~BList() {
     delete[] _array;
@@ -53,7 +53,7 @@ public:
 
   void Resize(unsigned capacity) {
     T* array = new T[capacity];
-    for (auto i = 0; i < min(capacity, _capacity); ++i) {
+    for (unsigned i = 0; i < min(capacity, _capacity); ++i) {
       array[i] = _array[i];
     }
     delete[] _array;
