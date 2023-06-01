@@ -84,6 +84,7 @@ protected:
   static void switch_context();
   static void schedule_task();
   static bool can_switch();
+  static void preempt_task();
 
   template<typename T>
   static BTaskInfoBase* alloc_task(BTask<T> task, typename BTask<T>::ArgumentType arg, unsigned stackSize) {

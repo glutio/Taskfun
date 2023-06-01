@@ -171,11 +171,7 @@ void BTaskSwitcher::init_arch() {
 using namespace Buratino;
 
 ISR(TIMER0_COMPA_vect) {
-  if (BTaskSwitcher::can_switch() && BTaskSwitcher::_current_slice <= 0) {
-    BTaskSwitcher::schedule_task();
-  } else {
-    --BTaskSwitcher::_current_slice;
-  }
+  BTaskSwitcher::preempt_task();
 }
 
 #endif

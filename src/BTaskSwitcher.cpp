@@ -127,13 +127,21 @@ bool BTaskSwitcher::can_switch() {
   return _initialized && _current_task == _next_task;
 }
 
+void BTaskSwitcher::preempt_task() {
+  BDisableInterrupts cli;
+  if (can_switch() && _current_slice <= 0) {
+    schedule_task();
+  } else {
+    --_current_slice;
+  }
+}
+
 void BTaskSwitcher::yield_task() {
   BDisableInterrupts cli;
   if (can_switch()) {
     _yielded_task = _current_task;
     schedule_task();
   }
-  return;
 }
 
 void BTaskSwitcher::initialize(int tasks, int slice) {
