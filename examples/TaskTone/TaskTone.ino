@@ -49,7 +49,7 @@ void setup() {
 
   noInterrupts();
   for (auto i = 'A'; i <= 'G'; i++) {
-    runTask(playNote, i);
+    runTask(playNote, i, 96);
   }
   interrupts();
 }
