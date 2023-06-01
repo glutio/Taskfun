@@ -157,3 +157,6 @@ struct ListNode {
   SyncVar<ListNode*> _next;
 }
 ```
+
+## Contact
+If you need assistance using the library please open an [issue](https://github.com/glutio/Taskfun/issues) on GitHub.
