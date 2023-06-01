@@ -1,7 +1,6 @@
 #ifndef __BTASKSWITCHER_H__
 #define __BTASKSWITCHER_H__
 
-#include <new>
 #include "BTask.h"
 #include "BList.h"
 #include "BTaskSwitcherSAMD.h"
@@ -49,6 +48,9 @@ protected:
     typename BTask<T>::ArgumentType arg;
     BTask<T> delegate;
     BTaskInfo() {}
+    static void* operator new(size_t, void* where) {
+      return where;
+    }
   };
 
   struct BSwitchState {
