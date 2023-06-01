@@ -51,7 +51,9 @@ bool BTaskSwitcher::disable() {
   return sreg & _BV(SREG_I);
 }
 
-void __attribute__((naked)) BTaskSwitcher::switch_context() {
+// not a static class function to avoid compiler warning
+void __attribute__((naked)) avr_switch_context()
+{
   asm volatile("push r0");
   asm volatile("in r0, __SREG__");
   asm volatile("push r0");
@@ -90,7 +92,7 @@ void __attribute__((naked)) BTaskSwitcher::switch_context() {
   asm volatile("in r25, __SP_H__");
   asm volatile("call %x0"
                :
-               : "i"(swap_stack));
+               : "i"(BTaskSwitcher::swap_stack));
   asm volatile("out __SP_L__, r24");
   asm volatile("out __SP_H__, r25");
   asm volatile("pop r31");
@@ -127,7 +129,11 @@ void __attribute__((naked)) BTaskSwitcher::switch_context() {
   asm volatile("pop r0");
   asm volatile("out __SREG__, r0");
   asm volatile("pop r0");
-  asm volatile("ret");
+  asm volatile("ret");  
+}
+
+void BTaskSwitcher::switch_context() {
+  avr_switch_context();
 }
 
 void BTaskSwitcher::init_task(BTaskInfoBase* taskInfo, BTaskWrapper wrapper) {
