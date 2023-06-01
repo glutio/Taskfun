@@ -54,7 +54,7 @@ void setupTasks(int numTasks = 3, int msSlice = 1);
 ```
 `numTasks` - number of tasks to initialize the internal task list with (+1 for the main `loop()`). The list will automatically grow (but not shrink) if you add more tasks, but that involves allocating new memory for a bigger list and copying the old list to the new one. Try to avoid this by specifying the expected number of tasks.
 
-`msSlice` - number milliseconds in a time slice. How long to allow a task to run before automatically switching to a different task (if there are any other tasks).
+`msSlice` - number of milliseconds in a time slice. How long to allow a task to run before automatically switching to a different task (if there are any other tasks).
 
 **Known Issue** - on Seeeduino XIAO add `delay(500)` as the first line of the `setup()` function in your sketch before calling `setupTasks()`
 
