@@ -7,7 +7,7 @@ Simply `#include "Taskfun.h"`, add `setupTasks()` to the `setup()` function of t
 The primary advantage of using Taskfun is its ability to handle multiple operations concurrently without the risk of task monopolization. This is particularly useful for larger or more complex projects. Below is a standard Arduino blink example implemented as two independent tasks and a synchronization variable.
 
 ```
-#include "Taskfun.h"
+#include <Taskfun.h>
 
 // synchronize access to this shared global variable
 SyncVar<bool> _on;
