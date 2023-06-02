@@ -2,7 +2,7 @@
 
 Taskfun is a library designed to introduce preemptive multitasking capabilities to your Arduino AVR and SAMD21 projects. Unlike cooperative multitasking, preemptive multitasking in Taskfun ensures automatic time-sharing between tasks, enhancing CPU utilization by allowing simultaneous execution of multiple tasks. Taskfun gives you the ability to run multiple operations concurrently, providing your Arduino with an extra layer of responsiveness.
 
-Simply `#include "Taskfun.h"`, add `setupTasks()` to the `setup()` function of the sketch and you can use `runTask()` to start a task. For synchronized access to shared variables across tasks use `SyncVar<>` class which overloads all operators and wraps each operation in a critical section (temporarily disables task switching).
+Simply `#include <Taskfun.h>`, add `setupTasks()` to the `setup()` function of the sketch and you can use `runTask()` to start a task. For synchronized access to shared variables across tasks use `SyncVar<>` class which overloads all operators and wraps each operation in a critical section (temporarily disables task switching).
 
 The primary advantage of using Taskfun is its ability to handle multiple operations concurrently without the risk of task monopolization. This is particularly useful for larger or more complex projects. Below is a standard Arduino blink example implemented as two independent tasks and a synchronization variable.
 
