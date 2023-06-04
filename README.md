@@ -86,7 +86,7 @@ int runTask(const T* instance, void (T::*task)(U arg), unsigned stackSize = 128 
 ```
 The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method.
 
-Returns `int` - created task id. Use this with `killTask()` to stop a task. The main `loop()` task has id 0 and cannot be stopped.
+Returns `int` - created task id. Use this with `stopTask()` to stop a task. The main `loop()` task has id 0 and cannot be stopped.
 
 `arg` - argument to pass to the task.
 
@@ -137,12 +137,19 @@ void loop() {
 ```
 Internally the implementation of `delay()` calls `yield()` which initiates task switching, so a task that is waiting in a `delay()` is not using the CPU. You can call `yield()` whenever you want to initiate a task switch, typically when a task does something and then waits for the next cycle.
 
-## killTask()
-If you want to stop a task use `killTask()` function which takes task id as a parameter.
+## stopTask()
+If you want to stop a task use `stopTask()` function which takes task id as a parameter.
 ```
-void killTask(int id);
+void stopTask(int id);
 ```
-A task can stop other tasks or can stop itself. In case a running task calls `killTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped by using `killTask()` or by naturally exiting the task function or method the task memory, including the stack, is freed but the task list does not shrink.
+A task can stop other tasks or can stop itself. In case a running task calls `stopTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped by using `stopTask()` or by naturally exiting the task function or method the task memory, including the stack, is freed but the task list does not shrink.
+
+## currentTask()
+Use `currentTask()` to get the id of currenly executing task. Technically the id is the tasks's position in the list of tasks. Main `loop()` task id is 0.
+
+```
+int currentTask()
+```
 
 ## SyncVar<>
 When two tasks access a global(shared) variable, access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.

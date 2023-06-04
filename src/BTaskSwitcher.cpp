@@ -166,8 +166,12 @@ void BTaskSwitcher::initialize(int tasks, int slice) {
 
 using namespace Buratino;
 
-void killTask(int id) {
+void stopTask(int id) {
   BTaskSwitcher::kill_task(id);
+}
+
+int currentTask() {
+  return BTaskSwitcher::current_task_id();
 }
 
 void setupTasks(int numTasks, int msSlice) {

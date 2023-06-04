@@ -18,7 +18,8 @@ template<typename T>
 int runTask(void (*task)(T arg), T arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
 template<typename T, typename U>
 int runTask(const T* instance, void (T::*task)(U arg), unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
-void killTask(int id);
+void stopTask(int id);
+int currentTask();
 void setupTasks(int numTasks = 3, int msSlice = 1);
 
 extern "C" void yield();
@@ -139,7 +140,8 @@ protected:
   friend int ::runTask(void (*task)(T arg), T arg, unsigned, uint8_t);
   template<typename T, typename U>
   friend int ::runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority);
-  friend void ::killTask(int);
+  friend void ::stopTask(int);
+  friend int ::currentTask();
   friend void ::setupTasks(int, int);
   friend void ::yield();
   template<typename T>
