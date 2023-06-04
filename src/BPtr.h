@@ -1,5 +1,5 @@
 #ifndef __BPTR_H__
-#define __BPTR_H_
+#define __BPTR_H__
 
 namespace Buratino {
 /*
