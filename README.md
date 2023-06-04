@@ -148,7 +148,7 @@ A task can stop other tasks or can stop itself. In case a running task calls `st
 Use `currentTask()` to get the id of currenly executing task. Technically the id is the tasks's position in the list of tasks. Main `loop()` task id is 0.
 
 ```
-int currentTask()
+int currentTask();
 ```
 
 ## SyncVar<>
@@ -156,6 +156,9 @@ When two tasks access a global(shared) variable, access needs to be synchronized
 ```
 // synchronized counter
 SyncVar<int> _counter;
+
+// array of synchronized variables
+SyncVar<bool> state[10];
 
 // synchronized linked list node
 template<typename T>
