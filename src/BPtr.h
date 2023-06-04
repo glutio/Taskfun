@@ -63,6 +63,11 @@ public:
     return ptr;
   }
 
+  // Comparison operator
+  bool operator ==(const BPtr& other) const {
+    return ptr == other.ptr;
+  }
+
   // Conversion operator to bool
   explicit operator bool() const {
     return ptr != nullptr;

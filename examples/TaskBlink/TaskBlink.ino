@@ -1,4 +1,5 @@
 #include <Taskfun.h>
+#include <Eventfun.h>
 
 // synchronize access to this shared global variable
 SyncVar<bool> _on;
