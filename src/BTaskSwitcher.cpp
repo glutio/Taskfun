@@ -58,35 +58,31 @@ void BTaskSwitcher::kill_task(int id) {
   restore(cli);
 }
 
-int BTaskSwitcher::get_next_task() {
-  const unsigned high = 50;        //62;
-  const unsigned med = high + 33;  //24
-  //const unsigned low = 100;
+int BTaskSwitcher::get_next_task() { 
+  unsigned weights[] = { 50, 33, 17 };
+  const unsigned priCount = sizeof(weights) / sizeof(weights[0]);
+  auto total = 0;
+  for(auto i = 0; i < priCount; ++i) {
+    if (!_pri[i].count || (_pri[i].count == 1 && _pri[i].current == _yielded_task)) {
+      weights[i] = 0;
+    }
+    else {
+      weights[i] *= _pri[i].count;
+      total += weights[i];
+    }
+  }
 
-  unsigned dice = rand() % 100;
-
+  if (!total) {
+    return _current_task;
+  }
+ 
+  unsigned dice = random(total);
   unsigned pri = 0;
-  if (dice < high) pri = TaskPriority::High;
-  else if (dice < med) pri = TaskPriority::Medium;
-  else pri = TaskPriority::Low;
 
-  if (!_pri[pri].count || (_pri[pri].count == 1 && _pri[pri].current == _yielded_task)) {
-    const int len = sizeof(_pri) / sizeof(_pri[0]);
-    int i;
-    for (i = pri + 1; i < len; ++i) {
-      if (_pri[i].count) break;
-    }
-    if (i == len) {
-      for (i = pri - 1; i >= 0; --i) {
-        if (_pri[i].count) break;
-      }
-    }
-    if (i >= 0 && i < len) {  // found another priority level
-      pri = i;
-    } else  // no other tasks found
-    {
-      return _yielded_task;
-    }
+  unsigned cumulative = 0;
+  while (dice >= cumulative + weights[pri]) {
+    cumulative += weights[pri];
+    ++pri;
   }
 
   auto next_task = _pri[pri].current;
