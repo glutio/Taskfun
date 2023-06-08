@@ -57,7 +57,7 @@ void setup() {
   noInterrupts();
   // start 7 tasks each playing one of the scale notes
   for (auto i = 'A'; i <= 'G'; i++) {
-    runTask(playNote, i /* note */, 64 * sizeof(int) /* stack size */);
+    runTask(playNote, i /* note */, 128 * sizeof(int) /* stack size */);
   }
   interrupts();
 }

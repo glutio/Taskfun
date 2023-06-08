@@ -17,6 +17,15 @@ public:
   SyncVar(const T& value)
     : _value(value) {}
 
+  bool compareAndSet(const T& expected_value, const T& new_value) {
+    Cli cli;  // disable interrupts
+    if (_value == expected_value) {
+        _value = new_value;
+        return true;  // success, value was changed
+    }
+    return false;  // failure, value was not changed
+  }
+  
   // Overloading += operator
   SyncVar& operator+=(const T& rhs) {
     Cli cli;

@@ -104,8 +104,7 @@ void processMessage(String message) {
   mutexPrint(message);
 
   for (auto i = 0; i < _numLeds; ++i) {
-    if (!_ledInUse[i]) {
-      _ledInUse[i] = true;      
+    if (_ledInUse[i].compareAndSet(false, true)) {
       blinkMessage(message.c_str(), _pins[i]);
       _ledInUse[i] = false;
       break;
