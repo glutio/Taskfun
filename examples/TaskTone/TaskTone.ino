@@ -1,7 +1,8 @@
 #include <Taskfun.h>
 
-#define PIN 3
+#define MELODY_PIN 3
 
+// popcorn melody
 const char* _melody[] = {
   "4G4", "4F4", "4G4", "4D4", "8B3", "4D4", "2G3",
   "4G4", "4F4", "4G4", "4D4", "8B3", "4D4", "2G3",
@@ -20,22 +21,26 @@ const int _freq[9][7] = {
   { 1760, 1976, 1047, 1174, 1319, 1397, 1568 },  // A6 - G7
 };
 
+// current note 
 SyncVar<int> _note(0);
 
+// get note frequency
 int getFreq(const char* note) {
   return _freq[(note[2] - '0')][note[1] - 'A'];
 }
 
+// get note duration
 int getDuration(const char* note) {
   return 800 / (note[0] - '0');
 }
 
+// play note
 void playNote(char note) {
   while (1) {
     if (_melody[_note][1] == note) {
-      tone(PIN, getFreq(_melody[_note]));
+      tone(MELODY_PIN, getFreq(_melody[_note]));
       delay(getDuration(_melody[_note]));
-      noTone(PIN);
+      noTone(MELODY_PIN);
       delay(20);
       _note = (_note + 1) % _melodyLength;
     }
@@ -44,12 +49,15 @@ void playNote(char note) {
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(PIN, OUTPUT);
+  pinMode(MELODY_PIN, OUTPUT);
+  
+  // initialize multitasking for 7 tasks
   setupTasks('G' - 'A' + 1);
 
   noInterrupts();
+  // start 7 tasks each playing one of the scale notes
   for (auto i = 'A'; i <= 'G'; i++) {
-    runTask(playNote, i, 96);
+    runTask(playNote, i /* note */, 64 * sizeof(int) /* stack size */);
   }
   interrupts();
 }
