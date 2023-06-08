@@ -167,7 +167,7 @@ struct ListNode {
   SyncVar<ListNode*> _next;
 }
 ```
-You can use `SyncVar<>` in many synchronization scenarios including Compare-and-Set where you want to compare the SyncVar variable with a value and if they are equal sets SyncVar variable to another value. This way both the comparison and settign the value are performed as one uninterrupted operation.
+You can use `SyncVar<>` in many synchronization scenarios including Compare-and-Set where you want to compare the SyncVar variable with a value and if they are equal set SyncVar variable to another value. This way both the comparison and setting the value are performed as one uninterrupted operation.
 ```
 // if _syncVar is false, set it to true and return true
 if (_syncVar.compareAndSet(false, true)) {
