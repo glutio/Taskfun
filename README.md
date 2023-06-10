@@ -13,7 +13,7 @@ The primary advantage of using Taskfun is its ability to handle multiple operati
 SyncVar<bool> _on;
 
 // strongly typed argument
-void On(int) {
+void On(int&) {
   while (1) {
     if (_on) { // overloaded operator disables interrupts before reading value
       digitalWrite(LED_BUILTIN, HIGH);
@@ -23,7 +23,7 @@ void On(int) {
   }
 }
 
-void Off(int) {
+void Off(int&) {
   while (1) {
     if (!_on) {
       digitalWrite(LED_BUILTIN, LOW);
