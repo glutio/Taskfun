@@ -1,3 +1,5 @@
+TIP: If your sketch crashes and behaves unexpectedly make sure the tasks have appropriate stack size.
+
 # Taskfun
 
 Taskfun is a library designed to introduce preemptive multitasking capabilities to your Arduino AVR and SAMD21 projects. Unlike cooperative multitasking, preemptive multitasking in Taskfun ensures automatic time-sharing between tasks, enhancing CPU utilization by allowing simultaneous execution of multiple tasks. Taskfun gives you the ability to run multiple operations concurrently, providing your Arduino with an extra layer of responsiveness.
