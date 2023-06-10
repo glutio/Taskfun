@@ -66,7 +66,7 @@ void myTaskFunction(int arg) {
   // do stuff
 }
 
-// task taking an integer String argument by reference
+// task taking an String argument by reference
 void myTaskFunction(String& arg) {
   // do stuff
 }
