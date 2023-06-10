@@ -1,9 +1,9 @@
 ## TaskBlink
-https://wokwi.com/projects/new/arduino-uno
+https://wokwi.com/projects/366934932414406657
 
-Blinking an LED from a task.
+Blinking two LEDs at the same time at different rate.
 
-<img width="360" alt="image" src="https://github.com/glutio/Taskfun/assets/22550674/a85c0f5e-91c7-45cb-8547-ce5b82e4e12a">
+<img width="351" alt="image" src="https://github.com/glutio/Taskfun/assets/22550674/6a01e069-a111-4a28-b1c1-9434bde6a3ca">
 
 ## TaskSync 
 https://wokwi.com/projects/366998573113488385
