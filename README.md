@@ -66,7 +66,7 @@ void myTaskFunction(int arg) {
   // do stuff
 }
 
-// task taking an String argument by reference
+// task taking a String argument by reference
 void myTaskFunction(String& arg) {
   // do stuff
 }
@@ -80,7 +80,7 @@ public:
   }
 }
 ```
-A task my take an argument by value or by reference. When you run a task a copy of the argument value is saved on the task's stack. If the task takes an argument by reference it will receive a reference to this copy. If a task takes an argument by value then it will receive a copy of the copy. Pass simple types (`int`, `char`, `float`, etc) by value and complex types (`class` or `struct`) by reference. Remember that a copy of the argument is made on the task's stack even if it is passed by reference. If you want to avoid this use pointer type for argument like `void*` or `MyClass*`.
+A task may take an argument by value or by reference. When you run a task, a copy of the argument value is saved on the task's stack. If the task takes an argument by reference it will receive a reference to this copy. If a task takes an argument by value then it will receive a copy of the that copy. Pass simple types (`int`, `char`, `float`, etc) by value and complex types (`class` or `struct`) by reference. Remember that a copy of the argument is made on the task's stack even if it is passed by reference. If you want to avoid this use pointer type for argument like `void*` or `MyClass*`.
 
 
 ## Starting a task
