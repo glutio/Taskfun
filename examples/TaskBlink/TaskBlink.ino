@@ -1,23 +1,29 @@
 #include <Taskfun.h>
 
-// Implement blink as a task
-void Blink(int blink_delay) {
-  while (1) {
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(blink_delay);  
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(blink_delay);  
-  } 
+void Led1(int& ms){
+  while(1) {
+    digitalWrite(10, HIGH);
+    delay(ms);
+    digitalWrite(10, LOW);
+    delay(ms);
+  }
 }
 
-void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
+void Led2(int& ms){
+  while(1) {
+    digitalWrite(11, HIGH);
+    delay(ms);
+    digitalWrite(11, LOW);
+    delay(ms);
+  }
+}
 
-  // initialize multitasking
+void setup(){
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
   setupTasks();
-
-  // start the task
-  runTask(Blink, 1000 /* blink_delay */);
+  runTask(Led1, 500);
+  runTask(Led2, 1000);
 }
 
 void loop() {
