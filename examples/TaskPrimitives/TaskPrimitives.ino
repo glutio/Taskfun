@@ -93,7 +93,7 @@ void blinkMessage(const char* message, int pin) {
 }
 
 // task for processing a message
-void processMessage(String message) {
+void processMessage(String& message) {
   mutexPrint("Received: ");
   mutexPrint(message);
   
@@ -116,7 +116,7 @@ void processMessage(String message) {
 }
 
 // produce constant tone to mix with the morse code
-void produceTone(int) {
+void produceTone(int&) {
   while(1) {
     digitalWrite(_buzzerPin, HIGH);
     delay(1);
