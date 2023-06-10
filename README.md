@@ -13,7 +13,7 @@ The primary advantage of using Taskfun is its ability to handle multiple operati
 SyncVar<bool> _on;
 
 // strongly typed argument
-void On(int&) {
+void On(int) {
   while (1) {
     if (_on) { // overloaded operator disables interrupts before reading value
       digitalWrite(LED_BUILTIN, HIGH);
@@ -23,7 +23,7 @@ void On(int&) {
   }
 }
 
-void Off(int&) {
+void Off(int) {
   while (1) {
     if (!_on) {
       digitalWrite(LED_BUILTIN, LOW);
@@ -61,47 +61,55 @@ void setupTasks(int numTasks = 3, int msSlice = 1);
 ## Task
 A task is a void function (or a class method) that takes one argument of any type. If your task does not need an argument you still have to declare it but you don't have to use it.
 ```
-// task taking an integer argument
-void myTaskFunction(int& arg) {
+// task taking an integer argument by value
+void myTaskFunction(int arg) {
   // do stuff
 }
 
+// task taking an integer String argument by reference
+void myTaskFunction(String& arg) {
+  // do stuff
+}
+
+// class methods as tasks are also supported
 class Program {
 public:
   // task taking a pointer to Serial class
-  void myTaskMethod(double& arg) {
+  void myTaskMethod(double arg) {
      // do stuff
   }
 }
 ```
+A task my take an argument by value or by reference. When you run a task a copy of the argument value is saved on the task's stack. If the task takes an argument by reference it will receive a reference to this copy. If a task takes an argument by value then it will receive a copy of the copy. Pass simple types (`int`, `char`, `float`, etc) by value and complex types (`class` or `struct`) by reference. Remember that a copy of the argument is made on the task's stack even if it is passed by reference. If you want to avoid this use pointer type for argument like `void*` or `MyClass*`.
+
 
 ## Starting a task
 To start a task use `runTask()` function after you initialized the library by calling `setupTasks()`. Both function and method tasks are supported.
 ```
 template<typename T>
-int runTask(void (*task)(T& arg), T arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(void (*task)(T& arg), T& arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
 
 template<typename T, typename U>
-int runTask(const T* instance, void (T::*task)(U& arg), U arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(const T* instance, void (T::*task)(U& arg), U& arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
 ```
 The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method.
 
 Returns `int` - created task id. Use this with `stopTask()` to stop a task. The main `loop()` task has id 0 and cannot be stopped.
 
-`arg` - argument to pass to the task.
+`arg` - argument to pass to the task (either by value or by reference depending on the task's signature)
 
 `stackSize` - the size of the task's stack in bytes. The actual stack size will be bigger by the size of the task context which depends on the board and is 64 bytes on SAMD21 and 33 bytes on AVR. This parameter is critical, you may encounter either stack overflow if it's too small or main stack corruption if it's too big. If your sketch unexpectedly stops working make sure `stackSize` is appropriate for the amount of memory you have and the code you run in your tasks.
 
 `priority` - in which queue this task will live. There are three queues which share the CPU time. Priority 0 (High) gets 50% of CPU time, priority 1 gets 33% and priority 2 gets 17%. Once the queue is selected the next task from that queue is scheduled to run. The queue is processed in a round-robin fashion. Use priority 0 for tasks that need to run most of the time, use priority 1 for regular tasks and priority 2 for sleepy tasks.
 
 ```
-void myTaskFunction(int& arg) {
+void myTaskFunction(int arg) {
   // do stuff
 }
 
 class Program {
 public:
-  void myTaskMethod(double& arg) {
+  void myTaskMethod(double arg) {
      // do stuff
   }
 }
@@ -124,7 +132,7 @@ void setup() {
 ## delay() and yield()
 To implement a timer task you can use Arduino's `delay()` function. Here is a simple timer that triggers every second:
 ```
-void timerTask(int&) {
+void timerTask(int) {
   while(1) {
     delay(1000);
     // do stuff
