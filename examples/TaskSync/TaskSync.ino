@@ -1,32 +1,36 @@
 #include <Taskfun.h>
 
-// synchronize access to this shared global variable
+// shared variable to synchronize tasks
 SyncVar<bool> _on;
 
-// function that turns LED on or off depending on argument
-void OnOff(bool isOn) {
+// task to turn the LED on
+void On(int&) {
   while (1) {
-    if (_on == isOn) {
-      digitalWrite(LED_BUILTIN, isOn);
+    if (_on) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(1000);
+      _on = false;
+    }
+  }
+}
+
+// task to turn the LED off
+void Off(int&) {
+  while (1) {
+    if (!_on) {
+      digitalWrite(LED_BUILTIN, LOW);
       delay(1000);  
-      _on = !_on;
+      _on = true;
     }
   } 
 }
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  
-  // initialize multitasking
   setupTasks();
-
-  // ensure no task switching while initializing
   noInterrupts();
-  // add OnOff task as a task responsible for LED On state
-  runTask(OnOff, true);
-  // add OnOff task as a task responsible for LED Off state
-  runTask(OnOff, false);
-  // resume multitasking
+  runTask(On, 0 /* unused argument */);
+  runTask(Off, 0);
   interrupts();
 }
 
