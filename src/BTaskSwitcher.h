@@ -58,14 +58,16 @@ protected:
 
   template<typename T>
   struct BTaskInfo : BTaskInfoBase {
-    T arg;
     BTask<T> delegate;
+    T arg;
+    BTaskInfo(BTask<T>& task, T& argument) : delegate(task), arg(argument) { }
   };
 
   template<typename T>
   struct BTaskInfo<T&> : BTaskInfoBase {
-    T arg;
     BTask<T&> delegate;
+    T arg;
+    BTaskInfo(BTask<T&>& task, T& argument) : delegate(task), arg(argument) { }
   };
 
   struct BSwitchState {
@@ -104,23 +106,21 @@ protected:
   static void preempt_task();
 
   template<typename TTaskInfo, typename TTask, typename TArg>
-  static BTaskInfoBase* alloc_task(TTask task, TArg& arg, unsigned stackSize) {
+  static BTaskInfoBase* alloc_task(TTask& task, TArg& arg, unsigned stackSize) {
     auto size = sizeof(TTaskInfo) + stackSize + context_size();
     auto block = new uint8_t[size];
-    auto taskInfo = new (block) TTaskInfo();
-    taskInfo->delegate = task;
-    taskInfo->arg = arg;
+    auto taskInfo = new (block) TTaskInfo(task, arg);
     taskInfo->sp = &block[size - 1];
     return taskInfo;
   }
 
   template<typename T>
-  static BTaskInfoBase* alloc_task(BTask<T&> task, T& arg, unsigned stackSize) {
+  static BTaskInfoBase* alloc_task(BTask<T&>& task, T& arg, unsigned stackSize) {
     return alloc_task<BTaskInfo<T&>, BTask<T&>, T>(task, arg, stackSize);
   }
 
   template<typename T>
-  static BTaskInfoBase* alloc_task(BTask<T> task, T& arg, unsigned stackSize) {
+  static BTaskInfoBase* alloc_task(BTask<T>& task, T& arg, unsigned stackSize) {
     return alloc_task<BTaskInfo<T>, BTask<T>, T>(task, arg, stackSize);
   }
 
@@ -131,7 +131,7 @@ protected:
   }
 
   template<typename TTask, typename TArg>
-  static int run_task(TTask task, TArg& arg, unsigned stackSize, uint8_t priority) {
+  static int run_task(TTask& task, TArg& arg, unsigned stackSize, uint8_t priority) {
     BDisableInterrupts cli;
     if (!_initialized || priority > TaskPriority::Low || !stackSize) {
       return -1;
