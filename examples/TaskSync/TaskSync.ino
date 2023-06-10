@@ -4,7 +4,7 @@
 SyncVar<bool> _on;
 
 // task to turn the LED on
-void On(int&) {
+void On(int) {
   while (1) {
     if (_on) {
       digitalWrite(LED_BUILTIN, HIGH);
@@ -15,7 +15,7 @@ void On(int&) {
 }
 
 // task to turn the LED off
-void Off(int&) {
+void Off(int) {
   while (1) {
     if (!_on) {
       digitalWrite(LED_BUILTIN, LOW);

@@ -35,7 +35,7 @@ int getDuration(const char* note) {
 }
 
 // play note
-void playNote(char& note) {
+void playNote(char note) {
   while (1) {
     if (_melody[_note][1] == note) {
       tone(MELODY_PIN, getFreq(_melody[_note]));

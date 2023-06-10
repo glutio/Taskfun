@@ -1,6 +1,6 @@
 #include <Taskfun.h>
 
-void Led1(int& ms){
+void Led1(int ms){
   while(1) {
     digitalWrite(10, HIGH);
     delay(ms);
@@ -9,7 +9,7 @@ void Led1(int& ms){
   }
 }
 
-void Led2(int& ms){
+void Led2(int ms){
   while(1) {
     digitalWrite(11, HIGH);
     delay(ms);

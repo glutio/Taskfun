@@ -116,7 +116,7 @@ void processMessage(String& message) {
 }
 
 // produce constant tone to mix with the morse code
-void produceTone(int&) {
+void produceTone(int) {
   while(1) {
     digitalWrite(_buzzerPin, HIGH);
     delay(1);
