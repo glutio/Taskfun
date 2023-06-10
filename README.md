@@ -62,14 +62,14 @@ void setupTasks(int numTasks = 3, int msSlice = 1);
 A task is a void function (or a class method) that takes one argument of any type. If your task does not need an argument you still have to declare it but you don't have to use it.
 ```
 // task taking an integer argument
-void myTaskFunction(int arg) {
+void myTaskFunction(int& arg) {
   // do stuff
 }
 
 class Program {
 public:
   // task taking a pointer to Serial class
-  void myTaskMethod(double arg) {
+  void myTaskMethod(double& arg) {
      // do stuff
   }
 }
@@ -79,10 +79,10 @@ public:
 To start a task use `runTask()` function after you initialized the library by calling `setupTasks()`. Both function and method tasks are supported.
 ```
 template<typename T>
-int runTask(void (*task)(T arg), T arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(void (*task)(T& arg), T arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
 
 template<typename T, typename U>
-int runTask(const T* instance, void (T::*task)(U arg), unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(const T* instance, void (T::*task)(U& arg), U arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
 ```
 The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method.
 
@@ -95,13 +95,13 @@ Returns `int` - created task id. Use this with `stopTask()` to stop a task. The 
 `priority` - in which queue this task will live. There are three queues which share the CPU time. Priority 0 (High) gets 50% of CPU time, priority 1 gets 33% and priority 2 gets 17%. Once the queue is selected the next task from that queue is scheduled to run. The queue is processed in a round-robin fashion. Use priority 0 for tasks that need to run most of the time, use priority 1 for regular tasks and priority 2 for sleepy tasks.
 
 ```
-void myTaskFunction(int arg) {
+void myTaskFunction(int& arg) {
   // do stuff
 }
 
 class Program {
 public:
-  void myTaskMethod(double arg) {
+  void myTaskMethod(double& arg) {
      // do stuff
   }
 }
@@ -124,7 +124,7 @@ void setup() {
 ## delay() and yield()
 To implement a timer task you can use Arduino's `delay()` function. Here is a simple timer that triggers every second:
 ```
-void timerTask() {
+void timerTask(int&) {
   while(1) {
     delay(1000);
     // do stuff
