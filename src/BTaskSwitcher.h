@@ -15,9 +15,9 @@ struct TaskPriority {
 };
 
 template<typename T>
-int runTask(void (*task)(T arg), T arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(void (*task)(T& arg), T arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 template<typename T, typename U>
-int runTask(const T* instance, void (T::*task)(U arg), unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(const T* instance, void (T::*task)(U& arg), U arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 void stopTask(int id);
 int currentTask();
 void setupTasks(int numTasks = 3, int msSlice = 1);
@@ -90,7 +90,7 @@ protected:
   static void preempt_task();
 
   template<typename T>
-  static BTaskInfoBase* alloc_task(BTask<T> task, typename BTask<T>::ArgumentType arg, unsigned stackSize) {
+  static BTaskInfoBase* alloc_task(BTask<T> task, typename BTask<T>::ArgumentType& arg, unsigned stackSize) {
     auto size = sizeof(BTaskInfo<T>) + stackSize + context_size();
     auto block = new uint8_t[size];
     auto taskInfo = new (block) BTaskInfo<T>();
@@ -107,7 +107,7 @@ protected:
   }
 
   template<typename T>
-  static int run_task(BTask<T> task, typename BTask<T>::ArgumentType arg, unsigned stackSize, uint8_t priority) {
+  static int run_task(BTask<T> task, typename BTask<T>::ArgumentType& arg, unsigned stackSize, uint8_t priority) {
     BDisableInterrupts cli;
     if (!_initialized || priority > TaskPriority::Low || !stackSize) {
       return -1;
@@ -137,9 +137,9 @@ protected:
   }
 
   template<typename T>
-  friend int ::runTask(void (*task)(T arg), T arg, unsigned, uint8_t);
+  friend int ::runTask(void (*task)(T& arg), T arg, unsigned, uint8_t);
   template<typename T, typename U>
-  friend int ::runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority);
+  friend int ::runTask(const T* instance, void (T::*task)(U& arg), U arg, unsigned stackSize, uint8_t priority);
   friend void ::stopTask(int);
   friend int ::currentTask();
   friend void ::setupTasks(int, int);
@@ -153,12 +153,12 @@ protected:
 }
 
 template<typename T>
-int runTask(void (*task)(T arg), T arg, unsigned stackSize, uint8_t priority) {
+int runTask(void (*task)(T& arg), T arg, unsigned stackSize, uint8_t priority) {
   return Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(task), arg, stackSize, priority);
 }
 
 template<typename T, typename U>
-int runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority) {
+int runTask(const T* instance, void (T::*task)(U& arg), U arg, unsigned stackSize, uint8_t priority) {
   return Buratino::BTaskSwitcher::run_task<T>(Buratino::BTask<T>(instance, task), arg, stackSize, priority);
 }
 
