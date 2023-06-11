@@ -133,14 +133,17 @@ void setup() {
 ```
 Tasks can take the argument by value or by reference. In both cases a copy of the argument is made on the task's stack. To avoid this use a pointer type for the argument.
 ```
+// take argument by value
 void taskByValue(int i) {
   // ...
 }
 
+// take argument by reference
 void taskByRef(String& s) {
   // ...
 }
 
+// take a pointer type
 void taskByPointer(String* ps) {
   // ...
 }
