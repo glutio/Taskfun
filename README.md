@@ -131,6 +131,41 @@ void setup() {
   interrupts(); // enable task switching
 }
 ```
+Tasks can take the argument by value or by reference. In both cases a copy of the argument is made on the task's stack. If you don't want to make a copy of the argument on the tasks's stack use a pointer type for the argument.
+```
+// take argument by value
+void taskByValue(int i) {
+  // ...
+}
+
+// take argument by reference
+void taskByRef(String& s) {
+  // ...
+}
+
+// take a pointer type
+void taskByPointer(String* ps) {
+  // ...
+}
+
+String global("hello");
+
+void setup() {
+  // initialize multitasking
+  setupTasks();
+  
+  // pass argument by value
+  runTask(taskByValue, 100);
+  
+  // pass argument by reference, a copy is made on the task's stack
+  String s = "hello";
+  runTask(taskByRef, s);
+  
+  // pass a pointer
+  runTask(taskByPointer, &global);
+}
+```
+
 ## delay() and yield()
 To implement a timer task you can use Arduino's `delay()` function. Here is a simple timer that triggers every second:
 ```
