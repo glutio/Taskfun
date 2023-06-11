@@ -24,6 +24,8 @@ template<typename T, typename U>
 int runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 void stopTask(int id);
 int currentTask();
+void pauseTask(int id);
+void resumeTask(int id);
 void setupTasks(int numTasks = 3, int msSlice = 1);
 
 extern "C" void yield();
@@ -42,9 +44,14 @@ protected:
   };
 
   struct BTaskInfoBase {
+    enum {
+      fPriorityMask = 0x03,
+      fPause = 0x08,
+    };
+
     uint8_t* sp;
     int id;
-    uint8_t priority;
+    uint8_t flags;
     virtual ~BTaskInfoBase() {}
 
     static void* operator new(size_t size) {
@@ -53,6 +60,26 @@ protected:
 
     static void* operator new(size_t, void* where) {
       return where;
+    }
+
+    uint8_t priority() {
+      return flags & fPriorityMask;
+    }
+
+    void priority(uint8_t p) {
+      flags |= p & fPriorityMask;
+    }
+
+    void pause() {
+      flags |= fPause;
+    }
+
+    bool paused() {
+      return flags & fPause;
+    }
+
+    void resume() {
+      flags &= ~fPause;
     }
   };
 
@@ -89,6 +116,8 @@ protected:
   static void restore(bool enable);
   static void initialize(int tasks, int slice);
   static void yield_task();
+  static void pause_task(int id);
+  static void resume_task(int id);
   static void kill_task(int id);
   static void init_arch();
   static void init_task(BTaskInfoBase* taskInfo, BTaskWrapper wrapper);
@@ -143,7 +172,7 @@ protected:
     }
 
     taskInfo->id = new_task;
-    taskInfo->priority = priority;
+    taskInfo->priority(priority);
     if (!_pri[priority].count) {
       _pri[priority].current = new_task;
     };
@@ -174,6 +203,8 @@ protected:
   
   friend void ::stopTask(int);
   friend int ::currentTask();
+  friend void ::pauseTask(int);
+  friend void ::resumeTask(int);
   friend void ::setupTasks(int, int);
   friend void ::yield();
   template<typename T>

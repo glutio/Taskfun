@@ -43,7 +43,7 @@ void BTaskSwitcher::free_task(int id) {
 void BTaskSwitcher::kill_task(int id) {
   auto cli = disable();
   if (id > 0 && id < (int)_tasks.Length() && _tasks[id] && _tasks[id]->id > 0) {
-    --_pri[_tasks[id]->priority].count;
+    --_pri[_tasks[id]->priority()].count;
 
     if (id == _current_task) {
       _tasks[id]->id = -1;
@@ -91,10 +91,29 @@ int BTaskSwitcher::get_next_task() {
     if (next_task >= (int)_tasks.Length()) {
       next_task = 0;
     }
-  } while (next_task != _pri[pri].current && (next_task == _yielded_task || !_tasks[next_task] || _tasks[next_task]->id < 0 || _tasks[next_task]->priority != pri));
+  } while (next_task != _pri[pri].current && (next_task == _yielded_task || !_tasks[next_task] || _tasks[next_task]->id < 0 || _tasks[next_task]->priority() != pri || _tasks[next_task]->paused()));
   _pri[pri].current = next_task;
 
   return next_task;
+}
+
+void BTaskSwitcher::pause_task(int id) {
+  BDisableInterrupts cli;
+  if (id >=0 && id < _tasks.Length() && _tasks[id]) {
+    --_pri[_tasks[id]->priority()].count;
+    _tasks[id]->pause();
+    if (id == _current_task) {
+      yield();
+    }
+  }
+}
+
+void BTaskSwitcher::resume_task(int id) {
+  BDisableInterrupts cli;
+  if (id >=0 && id < _tasks.Length() && _tasks[id]) {
+    ++_pri[_tasks[id]->priority()].count;
+    _tasks[id]->resume();
+  }
 }
 
 uint8_t* BTaskSwitcher::swap_stack(uint8_t* sp) {
@@ -149,8 +168,8 @@ void BTaskSwitcher::initialize(int tasks, int slice) {
     // add the initial loop() task
     _tasks.Add(new BTaskInfoBase());  // loop() already has a stack
     _tasks[0]->id = 0;
-    _tasks[0]->priority = TaskPriority::Medium;
-    _pri[_tasks[0]->priority].count = 1;
+    _tasks[0]->priority(TaskPriority::Medium);
+    _pri[_tasks[0]->priority()].count = 1;
 
     init_arch();
 
@@ -164,6 +183,14 @@ using namespace Buratino;
 
 void stopTask(int id) {
   BTaskSwitcher::kill_task(id);
+}
+
+void pauseTask(int id) {
+  BTaskSwitcher::pause_task(id);
+}
+
+void resumeTask(int id) {
+  BTaskSwitcher::resume_task(id);
 }
 
 int currentTask() {
