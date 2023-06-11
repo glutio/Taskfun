@@ -131,7 +131,7 @@ void setup() {
   interrupts(); // enable task switching
 }
 ```
-Tasks can take the argument by value or by reference. In both cases a copy of the argument is made on the task's stack. To avoid this use a pointer type for the argument.
+Tasks can take the argument by value or by reference. In both cases a copy of the argument is made on the task's stack. If you don't want to make a copy of the argument on the tasks's stack use a pointer type for the argument.
 ```
 // take argument by value
 void taskByValue(int i) {
