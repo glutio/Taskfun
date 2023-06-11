@@ -56,18 +56,11 @@ protected:
     }
   };
 
-  template<typename T>
+  template<typename T, typename U>
   struct BTaskInfo : BTaskInfoBase {
     BTask<T> delegate;
-    T arg;
+    U arg;
     BTaskInfo(BTask<T>& task, T& argument) : delegate(task), arg(argument) { }
-  };
-
-  template<typename T>
-  struct BTaskInfo<T&> : BTaskInfoBase {
-    BTask<T&> delegate;
-    T arg;
-    BTaskInfo(BTask<T&>& task, T& argument) : delegate(task), arg(argument) { }
   };
 
   struct BSwitchState {
@@ -105,33 +98,33 @@ protected:
   static bool can_switch();
   static void preempt_task();
 
-  template<typename TTaskInfo, typename TTask, typename TArg>
-  static BTaskInfoBase* alloc_task(TTask& task, TArg& arg, unsigned stackSize) {
-    auto size = sizeof(TTaskInfo) + stackSize + context_size();
+  template<typename T, typename U>
+  static BTaskInfoBase* alloc_task(BTask<T>& task, U& arg, unsigned stackSize) {
+    auto size = sizeof(BTaskInfo<T, U>) + stackSize + context_size();
     auto block = new uint8_t[size];
-    auto taskInfo = new (block) TTaskInfo(task, arg);
+    auto taskInfo = new (block) BTaskInfo<T, U>(task, arg);
     taskInfo->sp = &block[size - 1];
     return taskInfo;
   }
 
   template<typename T>
   static BTaskInfoBase* alloc_task(BTask<T&>& task, T& arg, unsigned stackSize) {
-    return alloc_task<BTaskInfo<T&>, BTask<T&>, T>(task, arg, stackSize);
+    return alloc_task<T&, T>(task, arg, stackSize);
   }
 
   template<typename T>
   static BTaskInfoBase* alloc_task(BTask<T>& task, T& arg, unsigned stackSize) {
-    return alloc_task<BTaskInfo<T>, BTask<T>, T>(task, arg, stackSize);
+    return alloc_task<T, T>(task, arg, stackSize);
   }
 
-  template<typename T>
-  static void task_wrapper(BTaskInfo<T>* taskInfo) {
+  template<typename T, typename U>
+  static void task_wrapper(BTaskInfo<T, U>* taskInfo) {
     taskInfo->delegate(taskInfo->arg);
     kill_task(current_task_id());
   }
 
-  template<typename TTask, typename TArg>
-  static int run_task(TTask& task, TArg& arg, unsigned stackSize, uint8_t priority) {
+  template<typename T, typename U>
+  static int run_task(BTask<T>& task, U& arg, unsigned stackSize, uint8_t priority) {
     BDisableInterrupts cli;
     if (!_initialized || priority > TaskPriority::Low || !stackSize) {
       return -1;
@@ -156,18 +149,18 @@ protected:
     };
     ++_pri[priority].count;
 
-    init_task(taskInfo, (BTaskWrapper)task_wrapper<typename TTask::ArgumentType>);
-    return new_task;  
+    init_task(taskInfo, (BTaskWrapper)task_wrapper<typename BTask<T>::ArgumentType, U>);
+    return new_task;
   }
 
   template<typename T>
-  static int run_task(BTask<T> task, T& arg, unsigned stackSize, uint8_t priority) {
-    return run_task<BTask<T>, T>(task, arg, stackSize, priority);
+  static int run_task(BTask<T>& task, T& arg, unsigned stackSize, uint8_t priority) {
+    return run_task<T, T>(task, arg, stackSize, priority);
   }
 
   template<typename T>
-  static int run_task(BTask<T&> task, T& arg, unsigned stackSize, uint8_t priority) {
-    return run_task<BTask<T&>, T>(task, arg, stackSize, priority);
+  static int run_task(BTask<T&>& task, T& arg, unsigned stackSize, uint8_t priority) {    
+    return run_task<T&, T>(task, arg, stackSize, priority);
   }
 
   template<typename T>
@@ -193,22 +186,26 @@ protected:
 
 template<typename T>
 int runTask(void (*task)(T& arg), T& arg, unsigned stackSize, uint8_t priority) {
-  return Buratino::BTaskSwitcher::run_task(Buratino::BTask<T&>(task), arg, stackSize, priority);
+  auto btask = Buratino::BTask<T&>(task);
+  return Buratino::BTaskSwitcher::run_task(btask, arg, stackSize, priority);
 }
 
 template<typename T, typename U>
 int runTask(const T* instance, void (T::*task)(U& arg), U& arg, unsigned stackSize, uint8_t priority) {
-  return Buratino::BTaskSwitcher::run_task(Buratino::BTask<U&>(instance, task), arg, stackSize, priority);
+  auto btask = Buratino::BTask<U&>(instance, task);
+  return Buratino::BTaskSwitcher::run_task(btask, arg, stackSize, priority);
 }
 
 template<typename T>
 int runTask(void (*task)(T arg), T arg, unsigned stackSize, uint8_t priority) {
-  return Buratino::BTaskSwitcher::run_task(Buratino::BTask<T>(task), arg, stackSize, priority);
+  auto btask = Buratino::BTask<T>(task);
+  return Buratino::BTaskSwitcher::run_task(btask, arg, stackSize, priority);
 }
 
 template<typename T, typename U>
 int runTask(const T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint8_t priority) {
-  return Buratino::BTaskSwitcher::run_task(Buratino::BTask<T>(instance, task), arg, stackSize, priority);
+  auto btask = Buratino::BTask<T>(instance, task);
+  return Buratino::BTaskSwitcher::run_task(btask, arg, stackSize, priority);
 }
 
 #endif
