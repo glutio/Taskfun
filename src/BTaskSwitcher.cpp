@@ -99,7 +99,7 @@ int BTaskSwitcher::get_next_task() {
 
 void BTaskSwitcher::pause_task(int id) {
   BDisableInterrupts cli;
-  if (id >=0 && id < _tasks.Length() && _tasks[id]) {
+  if (id >=0 && id < _tasks.Length() && _tasks[id] && !_tasks[id]->paused()) {
     --_pri[_tasks[id]->priority()].count;
     _tasks[id]->pause();
     if (id == _current_task) {
@@ -110,7 +110,7 @@ void BTaskSwitcher::pause_task(int id) {
 
 void BTaskSwitcher::resume_task(int id) {
   BDisableInterrupts cli;
-  if (id >=0 && id < _tasks.Length() && _tasks[id]) {
+  if (id >=0 && id < _tasks.Length() && _tasks[id] && _tasks[id]->paused()) {
     ++_pri[_tasks[id]->priority()].count;
     _tasks[id]->resume();
   }
