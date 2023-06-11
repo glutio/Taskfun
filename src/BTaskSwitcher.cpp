@@ -62,7 +62,7 @@ int BTaskSwitcher::get_next_task() {
   unsigned weights[] = { 50, 33, 17 };
   const unsigned priCount = sizeof(weights) / sizeof(weights[0]);
   auto total = 0;
-  for(auto i = 0; i < priCount; ++i) {
+  for(unsigned i = 0; i < priCount; ++i) {
     if (!_pri[i].count || (_pri[i].count == 1 && _pri[i].current == _yielded_task)) {
       weights[i] = 0;
     }
@@ -99,7 +99,7 @@ int BTaskSwitcher::get_next_task() {
 
 void BTaskSwitcher::pause_task(int id) {
   BDisableInterrupts cli;
-  if (id >=0 && id < _tasks.Length() && _tasks[id] && !_tasks[id]->paused()) {
+  if (id >= 0 && id < (int)_tasks.Length() && _tasks[id] && !_tasks[id]->paused()) {
     --_pri[_tasks[id]->priority()].count;
     _tasks[id]->pause();
     if (id == _current_task) {
@@ -110,7 +110,7 @@ void BTaskSwitcher::pause_task(int id) {
 
 void BTaskSwitcher::resume_task(int id) {
   BDisableInterrupts cli;
-  if (id >=0 && id < _tasks.Length() && _tasks[id] && _tasks[id]->paused()) {
+  if (id >= 0 && id < (int)_tasks.Length() && _tasks[id] && _tasks[id]->paused()) {
     ++_pri[_tasks[id]->priority()].count;
     _tasks[id]->resume();
   }
@@ -159,16 +159,16 @@ void BTaskSwitcher::yield_task() {
   }
 }
 
-void BTaskSwitcher::initialize(int tasks, int slice) {
+void BTaskSwitcher::initialize(int tasks, int slice, uint8_t loop_pri) {
   BDisableInterrupts cli;
-  if (!_initialized && tasks > 0 && slice > 0) {
+  if (!_initialized && tasks > 0 && slice > 0 && loop_pri <= TaskPriority::Low) {
     _slice = slice;
     _tasks.Resize(tasks + 1);  // 1 for main loop()
 
     // add the initial loop() task
     _tasks.Add(new BTaskInfoBase());  // loop() already has a stack
     _tasks[0]->id = 0;
-    _tasks[0]->priority(TaskPriority::Medium);
+    _tasks[0]->priority(loop_pri);
     _pri[_tasks[0]->priority()].count = 1;
 
     init_arch();
@@ -197,8 +197,8 @@ int currentTask() {
   return BTaskSwitcher::current_task_id();
 }
 
-void setupTasks(int numTasks, int msSlice) {
-  BTaskSwitcher::initialize(numTasks, msSlice);
+void setupTasks(int numTasks, int msSlice, uint8_t loopPriority) {
+  BTaskSwitcher::initialize(numTasks, msSlice, loopPriority);
 }
 
 // used by arduino's delay()

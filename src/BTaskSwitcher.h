@@ -26,7 +26,7 @@ void stopTask(int id);
 int currentTask();
 void pauseTask(int id);
 void resumeTask(int id);
-void setupTasks(int numTasks = 3, int msSlice = 1);
+void setupTasks(int numTasks = 3, int msSlice = 1, uint8_t loopPriority = 1);
 
 extern "C" void yield();
 
@@ -114,7 +114,7 @@ protected:
   static unsigned context_size();
   static bool disable();
   static void restore(bool enable);
-  static void initialize(int tasks, int slice);
+  static void initialize(int tasks, int slice, uint8_t loop_pri);
   static void yield_task();
   static void pause_task(int id);
   static void resume_task(int id);
@@ -205,7 +205,7 @@ protected:
   friend int ::currentTask();
   friend void ::pauseTask(int);
   friend void ::resumeTask(int);
-  friend void ::setupTasks(int, int);
+  friend void ::setupTasks(int, int, uint8_t);
   friend void ::yield();
   template<typename T>
   friend class SyncVar;
