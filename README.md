@@ -157,7 +157,7 @@ void setup() {
   // pass argument by value
   runTask(taskByValue, 100);
   
-  // pass argument by reference
+  // pass argument by reference, a copy is made on the stack
   String s = "hello";
   runTask(taskByRef, s);
   
