@@ -195,6 +195,13 @@ Use `currentTask()` to get the id of currenly executing task. Technically the id
 ```
 int currentTask();
 ```
+## pauseTask() and resumeTask()
+You can pause and resume tasks using `pauseTask()` and `resumeTask()`. If you pause the last running task, it will get marked as paused but will continue running until there is another task to switch to. In case you need to temporarily pause a task's activity, using `pauseTask()` is more efficient than letting the task run without performing an action.
+```
+void pauseTask(int id);
+void resumeTask(int id);
+```
+`id` - id of the task to pause or resume. 
 
 ## SyncVar<>
 When two tasks access a global(shared) variable, access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
