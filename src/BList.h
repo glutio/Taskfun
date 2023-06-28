@@ -27,10 +27,7 @@ public:
 
   void Add(T item) {
     if (_count == _capacity) {
-      if (!_capacity) {
-        _capacity = 1;
-      }
-      Resize(_capacity * 2);
+      Resize(_capacity ? _capacity * 2 : 2);
     }
 
     _array[_count++] = item;
