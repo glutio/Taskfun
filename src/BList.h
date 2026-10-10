@@ -21,6 +21,13 @@ public:
   BList()
     : _array(0), _count(0), _capacity(0) {}
 
+  // BList owns _array; copying it would shallow-copy the pointer and lead to
+  // a double delete[] when both copies are destroyed. Nothing currently
+  // needs to copy a BList, so copying is disabled rather than given
+  // (unused, untested) deep-copy semantics.
+  BList(const BList&) = delete;
+  BList& operator = (const BList&) = delete;
+
   ~BList() {
     delete[] _array;
   }
