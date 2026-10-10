@@ -40,6 +40,32 @@ private:
     }
   };
 
+  /* adapters so a no-arg function/method can be used where an argument is expected;
+     the argument passed at the call site is simply ignored */
+  template<typename TClass>
+  struct CallableNoArgMethodImpl : public Callable {
+    TClass* _instance;
+    void (TClass::*_method)();
+
+    CallableNoArgMethodImpl(TClass* instance, void (TClass::*method)())
+      : _instance(instance), _method(method) {}
+
+    virtual void Call(TArgument) {
+      (_instance->*_method)();
+    }
+  };
+
+  struct CallableNoArgFunctionImpl : public Callable {
+    void (*_func)();
+
+    CallableNoArgFunctionImpl(void (*func)())
+      : _func(func) {}
+
+    virtual void Call(TArgument) {
+      (_func)();
+    }
+  };
+
 protected:
   BPtr<Callable> _callable;  // smart pointer
 
@@ -55,6 +81,13 @@ public:
 
   BTask(void (*func)(TArgument argument))
     : _callable(func ? new (std::nothrow) CallableFunctionImpl(func) : nullptr) {}
+
+  template<typename TClass>
+  BTask(TClass* instance, void (TClass::*method)())
+    : _callable(instance && method ? new (std::nothrow) CallableNoArgMethodImpl<TClass>(instance, method) : nullptr) {}
+
+  BTask(void (*func)())
+    : _callable(func ? new (std::nothrow) CallableNoArgFunctionImpl(func) : nullptr) {}
 
   explicit operator bool() const {
     return static_cast<bool>(_callable);

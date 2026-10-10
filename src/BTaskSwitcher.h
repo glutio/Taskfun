@@ -29,6 +29,9 @@ template<typename T>
 int runTask(void (*task)(T arg), T arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 template<typename T, typename U>
 int runTask(T* instance, void (T::*task)(U arg), U arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
+int runTask(void (*task)(), unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
+template<typename T>
+int runTask(T* instance, void (T::*task)(), unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 void stopTask(int id);
 int currentTask();
 void pauseTask(int id);
@@ -47,6 +50,10 @@ void setupTasks(int numTasks = 3, int msSlice = 1, uint8_t loopPriority = 1);
 extern "C" void yield();
 
 namespace Buratino {
+
+/* placeholder argument type used internally so a no-arg task can reuse
+   the existing typed-argument run_task/alloc_task/task_wrapper machinery */
+struct BNoArg {};
 
 class BTaskSwitcher {
 protected:
@@ -263,6 +270,9 @@ protected:
   friend int ::runTask(void (*)(T), T, unsigned, uint8_t);
   template<typename T, typename U>
   friend int ::runTask(T*, void (T::*)(U), U, unsigned, uint8_t);
+  friend int ::runTask(void (*)(), unsigned, uint8_t);
+  template<typename T>
+  friend int ::runTask(T*, void (T::*)(), unsigned, uint8_t);
   
   friend void ::stopTask(int);
   friend int ::currentTask();
@@ -306,6 +316,21 @@ int runTask(T* instance, void (T::*task)(U arg), U arg, unsigned stackSize, uint
   Buratino::BTaskSwitcher::BDisableInterrupts cli;
   auto btask = Buratino::BTask<U>(instance, task);
   return Buratino::BTaskSwitcher::run_task(btask, arg, stackSize, priority);
+}
+
+inline int runTask(void (*task)(), unsigned stackSize, uint8_t priority) {
+  Buratino::BTaskSwitcher::BDisableInterrupts cli;
+  static Buratino::BNoArg dummy;
+  auto btask = Buratino::BTask<Buratino::BNoArg>(task);
+  return Buratino::BTaskSwitcher::run_task(btask, dummy, stackSize, priority);
+}
+
+template<typename T>
+int runTask(T* instance, void (T::*task)(), unsigned stackSize, uint8_t priority) {
+  Buratino::BTaskSwitcher::BDisableInterrupts cli;
+  static Buratino::BNoArg dummy;
+  auto btask = Buratino::BTask<Buratino::BNoArg>(instance, task);
+  return Buratino::BTaskSwitcher::run_task(btask, dummy, stackSize, priority);
 }
 
 #endif

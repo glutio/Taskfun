@@ -365,6 +365,26 @@ static bool allTaskOverloadsInvokeCopiedArguments() {
   return true;
 }
 
+static void receiveNoArgument() { received = 42; }
+struct NoArgReceiver {
+  void method() { received = 99; }
+};
+
+static bool noArgTasksIgnoreDummyArgument() {
+  NativeTests::setup(4);
+  received = 0;
+  NoArgReceiver instance;
+  int functionId = runTask(receiveNoArgument, 128);
+  int methodId = runTask(&instance, &NoArgReceiver::method, 128);
+  CHECK(functionId > 0 && methodId > 0);
+  NativeTests::invoke<Buratino::BNoArg, Buratino::BNoArg>(functionId);
+  CHECK(received == 42);
+  NativeTests::invoke<Buratino::BNoArg, Buratino::BNoArg>(methodId);
+  CHECK(received == 99);
+  CHECK(runTask(static_cast<NoArgReceiver*>(0), &NoArgReceiver::method, 128) == -1);
+  return true;
+}
+
 struct Argument {
   static int alive;
   int value;
@@ -695,6 +715,7 @@ int main() {
     { "allocation critical section", taskAllocationsAreGuarded },
     { "invalid task rejection", oversizedAndInvalidTasksAreRejected },
     { "task overloads and copies", allTaskOverloadsInvokeCopiedArguments },
+    { "no-arg task overloads", noArgTasksIgnoreDummyArgument },
     { "argument destruction", copiedArgumentsAreDestroyedExactlyOnce },
     { "SyncVar copy critical section", copyingSyncVarProtectsSharedRead },
     { "deferred stack reclamation", terminatedStackIsReapedOnlyAfterSwitch },

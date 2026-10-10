@@ -17,7 +17,7 @@ The primary advantage of using Taskfun is its ability to handle multiple operati
 SyncVar<bool> _on;
 
 // strongly typed argument
-void On(int) {
+void On() {
   while (1) {
     if (_on) { // overloaded operator disables interrupts before reading value
       digitalWrite(LED_BUILTIN, HIGH);
@@ -27,7 +27,7 @@ void On(int) {
   }
 }
 
-void Off(int) {
+void Off() {
   while (1) {
     if (!_on) {
       digitalWrite(LED_BUILTIN, LOW);
@@ -41,8 +41,8 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   setupTasks();
   noInterrupts();
-  runTask(On, 0 /* unused argument */);
-  runTask(Off, 0);
+  runTask(On);
+  runTask(Off);
   interrupts();
 }
 
@@ -65,7 +65,7 @@ void setupTasks(int numTasks = 3, int msSlice = 1, uint8_t loopPriority = 1);
 **Known Issue** - on Seeeduino XIAO add `delay(500)` as the first line of the `setup()` function in your sketch before calling `setupTasks()`
 
 ## Task
-A task is a void function (or a class method) that takes one argument of any type. If your task does not need an argument you still have to declare it but you don't have to use it.
+A task is a void function (or a class method) that takes one argument of any type, or no argument at all.
 ```
 // task taking an integer argument by value
 void myTaskFunction(int arg) {
@@ -74,6 +74,11 @@ void myTaskFunction(int arg) {
 
 // task taking a String argument by reference
 void myTaskFunction(String& arg) {
+  // do stuff
+}
+
+// task that doesn't need an argument
+void myTaskFunction() {
   // do stuff
 }
 
@@ -97,8 +102,14 @@ int runTask(void (*task)(T& arg), T& arg, unsigned stackSize = 256 * sizeof(int)
 
 template<typename T, typename U>
 int runTask(T* instance, void (T::*task)(U& arg), U& arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
+
+// overloads for tasks that take no argument
+int runTask(void (*task)(), unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
+
+template<typename T>
+int runTask(T* instance, void (T::*task)(), unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 ```
-The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method.
+The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method. The no-argument overloads are for tasks that don't need any state - no argument is passed in and none needs to be declared.
 
 Returns `int` - created task id, or `-1` if initialization has not succeeded, the task/parameters are invalid, or the library cannot allocate memory. Check the result before using it with `stopTask()`. The main `loop()` task has id 0 and cannot be stopped. Task IDs are reused after cleanup; do not retain an ID after its task ends.
 
@@ -111,6 +122,10 @@ Returns `int` - created task id, or `-1` if initialization has not succeeded, th
 ```
 void myTaskFunction(int arg) {
   // do stuff
+}
+
+void myOtherTaskFunction() {
+  // do stuff, no argument needed
 }
 
 class Program {
@@ -128,6 +143,9 @@ void setup() {
   
   // run function task
   runTask(myTaskFunction, 0 /* unused arg */);
+  
+  // run function task that takes no argument
+  runTask(myOtherTaskFunction);
   
   // run method task
   runTask(&program, &Program::myTaskMethod, 0.0 /* unused double arg */);
