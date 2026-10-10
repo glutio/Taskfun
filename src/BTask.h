@@ -50,11 +50,15 @@ public:
     : _callable(0) {}
 
   template<typename TClass>
-  BTask(const TClass* instance, void (TClass::*method)(TArgument argument))
-    : _callable(new CallableMethodImpl<TClass>(instance, method)) {}
+  BTask(TClass* instance, void (TClass::*method)(TArgument argument))
+    : _callable(instance && method ? new (std::nothrow) CallableMethodImpl<TClass>(instance, method) : nullptr) {}
 
   BTask(void (*func)(TArgument argument))
-    : _callable(new CallableFunctionImpl(func)) {}
+    : _callable(func ? new (std::nothrow) CallableFunctionImpl(func) : nullptr) {}
+
+  explicit operator bool() const {
+    return static_cast<bool>(_callable);
+  }
 
   void operator()(TArgument argument) {
     if (_callable) {

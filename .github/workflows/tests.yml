@@ -1,0 +1,55 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      simulate:
+        description: Run Uno and Mega tests in Wokwi (requires WOKWI_CLI_TOKEN secret)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Native C++ tests with AddressSanitizer
+        shell: pwsh
+        run: .\tests\run-native.ps1 -Sanitize
+
+  firmware:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: arduino/setup-arduino-cli@v2.0.0
+        with:
+          version: 1.5.1
+      - name: Install Arduino toolchains
+        shell: pwsh
+        run: |
+          arduino-cli core update-index
+          if ($LASTEXITCODE) { throw 'Arduino index update failed.' }
+          arduino-cli core install arduino:avr@1.8.8 arduino:samd@1.8.14
+          if ($LASTEXITCODE) { throw 'Arduino core installation failed.' }
+      - name: Compile regressions and examples
+        shell: pwsh
+        run: .\tests\run-target.ps1 -Examples
+      - name: Wokwi runtime regressions
+        if: github.event_name == 'workflow_dispatch' && inputs.simulate
+        shell: pwsh
+        env:
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+        run: |
+          if (-not $env:WOKWI_CLI_TOKEN) { throw 'WOKWI_CLI_TOKEN secret is required.' }
+          $bin = Join-Path $env:RUNNER_TEMP 'wokwi'
+          New-Item -ItemType Directory -Path $bin -Force | Out-Null
+          Invoke-WebRequest 'https://github.com/wokwi/wokwi-cli/releases/download/v0.28.1/wokwi-cli-win-x64.exe' -OutFile (Join-Path $bin 'wokwi-cli.exe')
+          $env:PATH = "$bin;$env:PATH"
+          .\tests\run-target.ps1 -Simulate

@@ -11,11 +11,19 @@ protected:
 protected:
   T _value;
 
+  static T read(const SyncVar& other) {
+    Cli cli;
+    return other._value;
+  }
+
 public:
-  SyncVar() {}
+  SyncVar() : _value() {}
 
   SyncVar(const T& value)
     : _value(value) {}
+
+  SyncVar(const SyncVar& other)
+    : _value(read(other)) {}
 
   bool compareAndSet(const T& expected_value, const T& new_value) {
     Cli cli;  // disable interrupts

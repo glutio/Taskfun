@@ -1,6 +1,10 @@
 #ifndef __BLIST_H__
 #define __BLIST_H__
 
+#include <stdint.h>
+#include <limits.h>
+#include <new>
+
 namespace Buratino {
 
 template<typename T>
@@ -12,7 +16,7 @@ protected:
 
 public:
   BList(uint16_t capacity)
-    : _array(new T[capacity]), _count(0), _capacity(capacity)  {}
+    : _array(0), _count(0), _capacity(0) { Resize(capacity); }
 
   BList()
     : _array(0), _count(0), _capacity(0) {}
@@ -25,12 +29,15 @@ public:
     return _array[index];
   }
 
-  void Add(T item) {
+  bool Add(T item) {
     if (_count == _capacity) {
-      Resize(_capacity ? _capacity * 2 : 2);
+      if (_capacity > UINT_MAX / 2 || !Resize(_capacity ? _capacity * 2 : 2)) {
+        return false;
+      }
     }
 
     _array[_count++] = item;
+    return true;
   }
 
   void Remove(unsigned index) {
@@ -48,14 +55,19 @@ public:
     return _capacity;
   }
 
-  void Resize(unsigned capacity) {
-    T* array = new T[capacity];
-    for (unsigned i = 0; i < min(capacity, _capacity); ++i) {
+  bool Resize(unsigned capacity) {
+    if (capacity > static_cast<size_t>(-1) / sizeof(T)) return false;
+    T* array = capacity ? new (std::nothrow) T[capacity] : nullptr;
+    if (capacity && !array) return false;
+    unsigned count = capacity < _count ? capacity : _count;
+    for (unsigned i = 0; i < count; ++i) {
       array[i] = _array[i];
     }
     delete[] _array;
     _array = array;
     _capacity = capacity;
+    _count = count;
+    return true;
   }
 
   void Compact(T filter) {

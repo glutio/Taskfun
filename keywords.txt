@@ -12,8 +12,10 @@
 setupTasks	KEYWORD2
 runTask		KEYWORD2
 killTask	KEYWORD2
+sleepTask	KEYWORD2
+taskStackInfo	KEYWORD2
+TaskStackInfo	KEYWORD1
 
 #######################################
 # Constants (LITERAL1)
 #######################################
-

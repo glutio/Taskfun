@@ -6,6 +6,8 @@ Taskfun is a library designed to introduce preemptive multitasking capabilities 
 
 Simply `#include <Taskfun.h>`, add `setupTasks()` to the `setup()` function of the sketch and you can use `runTask()` to start a task. For synchronized access to shared variables across tasks use `SyncVar<>` class which overloads all operators and wraps each operation in a critical section (temporarily disables task switching).
 
+Keep application code in your sketch's `.ino` file, not in Taskfun's library source files. If you use a separate `.cpp` file, include `Arduino.h` and declare functions before calling them; Arduino's automatic function declarations apply only to `.ino` files.
+
 The primary advantage of using Taskfun is its ability to handle multiple operations concurrently without the risk of task monopolization. This is particularly useful for larger or more complex projects. Below is a standard Arduino blink example implemented as two independent tasks and a synchronization variable.
 
 ```
@@ -52,11 +54,13 @@ void loop() {
 Before tasks can be created the library needs to be initialized by calling `setupTasks()` from the `setup()` function of your Arduino sketch.
 
 ```
-void setupTasks(int numTasks = 3, int msSlice = 1);
+void setupTasks(int numTasks = 3, int msSlice = 1, uint8_t loopPriority = 1);
 ```
 `numTasks` - number of tasks to initialize the internal task list with (+1 for the main `loop()`). The list will automatically grow (but not shrink) if you add more tasks, but that involves allocating new memory for a bigger list and copying the old list to the new one. Try to avoid this by specifying the expected number of tasks.
 
-`msSlice` - number of milliseconds in a time slice. How long to allow a task to run before automatically switching to a different task (if there are any other tasks).
+`msSlice` - number of timer ticks in a time slice. A tick is 1 ms on SAMD21 and approximately 1.024 ms on a 16 MHz AVR using Arduino's default Timer0 configuration.
+
+`loopPriority` - priority of the main `loop()` task, using the same priority values as `runTask()`.
 
 **Known Issue** - on Seeeduino XIAO add `delay(500)` as the first line of the `setup()` function in your sketch before calling `setupTasks()`
 
@@ -76,33 +80,33 @@ void myTaskFunction(String& arg) {
 // class methods as tasks are also supported
 class Program {
 public:
-  // task taking a pointer to Serial class
+  // task taking a double argument
   void myTaskMethod(double arg) {
      // do stuff
   }
-}
+};
 ```
-A task may take an argument by value or by reference. When you run a task, a copy of the argument value is saved on the task's stack. If the task takes an argument by reference it will receive a reference to this copy. If a task takes an argument by value then it will receive a copy of that copy. Pass simple types (`int`, `char`, `float`, etc) by value and complex types (`class` or `struct`) by reference. Remember that a copy of the argument is made on the task's stack even if it is passed by reference. If you want to avoid this use pointer type for argument like `void*` or `MyClass*`.
+A task may take an argument by value or by reference. When you run a task, a copy of the argument value is saved in the task's private allocation, separately from its usable stack space. If the task takes an argument by reference it will receive a reference to this copy. If a task takes an argument by value then it will receive a copy of that copy. Pass simple types (`int`, `char`, `float`, etc) by value and complex types (`class` or `struct`) by reference. An argument copy is stored even when passed by reference. To share an existing object instead, pass a pointer such as `MyClass*`; the pointer is copied, and the pointed-to object must remain alive while the task uses it.
 
 
 ## Starting a task
 To start a task use `runTask()` function after you initialized the library by calling `setupTasks()`. Both function and method tasks are supported.
 ```
 template<typename T>
-int runTask(void (*task)(T& arg), T& arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(void (*task)(T& arg), T& arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 
 template<typename T, typename U>
-int runTask(const T* instance, void (T::*task)(U& arg), U& arg, unsigned stackSize = 128 * sizeof(int), uint8_t priority = 1);
+int runTask(T* instance, void (T::*task)(U& arg), U& arg, unsigned stackSize = 256 * sizeof(int), uint8_t priority = 1);
 ```
 The first declaration is for function tasks - it takes a pointer to a void function taking argument of type T. The second declaration is for method tasks - it takes a class instance and a pointer to the method.
 
-Returns `int` - created task id. Use this with `stopTask()` to stop a task. The main `loop()` task has id 0 and cannot be stopped.
+Returns `int` - created task id, or `-1` if initialization has not succeeded, the task/parameters are invalid, or the library cannot allocate memory. Check the result before using it with `stopTask()`. The main `loop()` task has id 0 and cannot be stopped. Task IDs are reused after cleanup; do not retain an ID after its task ends.
 
 `arg` - argument to pass to the task (either by value or by reference depending on the task's signature)
 
-`stackSize` - the size of the task's stack in bytes. The actual stack size will be bigger by the size of the task context which depends on the board and is 64 bytes on SAMD21 and 33 bytes on AVR. This parameter is critical, you may encounter either stack overflow if it's too small or main stack corruption if it's too big. If your sketch unexpectedly stops working make sure `stackSize` is appropriate for the amount of memory you have and the code you run in your tasks.
+`stackSize` - usable task stack space in bytes. The allocation additionally holds the task object, copied argument, saved context (64 bytes on SAMD21 or 33 bytes on AVR), an 8-byte stack guard, and 8 bytes reserved for return-address/alignment overhead. The delegate and its reference count use separate allocations. The default stack is 512 bytes on AVR and 1024 bytes on SAMD21. A stack that is too small can corrupt memory; choose sizes appropriate for the board and task code.
 
-`priority` - in which queue this task will live. There are three queues which share the CPU time. Priority 0 (High) gets 50% of CPU time, priority 1 gets 33% and priority 2 gets 17%. Once the queue is selected the next task from that queue is scheduled to run. The queue is processed in a round-robin fashion. Use priority 0 for tasks that need to run most of the time, use priority 1 for regular tasks and priority 2 for sleepy tasks.
+`priority` - which queue this task belongs to. High (0), Medium (1), and Low (2) have per-task weights of 50, 33, and 17. Queue selection is random, weighted by its number of eligible tasks times its per-task weight; selection within a queue is round-robin. These are not guaranteed fixed CPU percentages. A yielding task is excluded from that selection when another eligible task exists.
 
 ```
 void myTaskFunction(int arg) {
@@ -114,7 +118,7 @@ public:
   void myTaskMethod(double arg) {
      // do stuff
   }
-}
+};
 
 Program program; // instance of Program class
 
@@ -126,12 +130,12 @@ void setup() {
   runTask(myTaskFunction, 0 /* unused arg */);
   
   // run method task
-  runTask(&program, &Program::myTaskMethod, 0 /* unused arg */);
+  runTask(&program, &Program::myTaskMethod, 0.0 /* unused double arg */);
   
   interrupts(); // enable task switching
 }
 ```
-Tasks can take the argument by value or by reference. In both cases a copy of the argument is made on the task's stack. If you don't want to make a copy of the argument on the tasks's stack use a pointer type for the argument.
+Tasks can take the argument by value or by reference. In both cases a copy of the argument is stored in the task's private allocation. Use a pointer argument to share the original object instead of copying it.
 ```
 // take argument by value
 void taskByValue(int i) {
@@ -180,14 +184,14 @@ void loop() {
   yield(); // switch tasks
 }
 ```
-Internally the implementation of `delay()` calls `yield()` which initiates task switching, so a task that is waiting in a `delay()` is not using the CPU. You can call `yield()` whenever you want to initiate a task switch, typically when a task does something and then waits for the next cycle.
+Internally `delay()` calls `yield()`, allowing other tasks to run while it polls the timer. This is not a blocking sleep: the waiting task remains eligible and consumes CPU when scheduled. `yield()` requests a task switch but does not pause the task or put the processor to sleep.
 
 ## stopTask()
 If you want to stop a task use `stopTask()` function which takes task id as a parameter.
 ```
 void stopTask(int id);
 ```
-A task can stop other tasks or can stop itself. In case a running task calls `stopTask()` with its own `id` the task will be removed from the list during the next task switch. When a task is stopped by using `stopTask()` or by naturally exiting the task function or method the task memory, including the stack, is freed but the task list does not shrink.
+A task can stop other tasks or itself. Stopping another task frees it immediately. A self-stopping or naturally returning task is marked dead, then its stack is reclaimed from a different task on a subsequent timer tick or library call. This avoids freeing the stack while it is still in use. If no runnable tasks remain, control returns to the main loop even if it was paused. The task list does not shrink.
 
 ## currentTask()
 Use `currentTask()` to get the id of currenly executing task. Technically the id is the tasks's position in the list of tasks. Main `loop()` task id is 0.
@@ -203,8 +207,52 @@ void resumeTask(int id);
 ```
 `id` - id of the task to pause or resume. 
 
+## sleepTask()
+
+```cpp
+bool sleepTask(unsigned long milliseconds);
+```
+
+Unlike `delay()`, this blocks the calling task and removes it from scheduling until its deadline. It returns `true` after waking, or `false` if initialization has not succeeded, the calling task is paused, a positive delay is requested with interrupts disabled, or the duration exceeds `2147483647` ms. `sleepTask(0)` yields without sleeping.
+
+```cpp
+void timerTask(int) {
+  while (true) {
+    // perform work
+    sleepTask(1000);
+  }
+}
+```
+
+Sleep deadlines use `millis()` and handle its 32-bit rollover. Expiration makes a task eligible; it does not guarantee immediate execution. Pause and sleep are independent: expiration does not resume a paused task, and `resumeTask()` does not shorten a sleep. If all tasks are blocked, the processor polls inside the sleep call; this is not a low-power sleep. No interrupt or timer configuration changes are needed.
+
+## Stack diagnostics
+
+```cpp
+struct TaskStackInfo {
+  unsigned size;
+  unsigned minimumFree;
+  bool overflowed;
+};
+bool taskStackInfo(int id, TaskStackInfo& info);
+```
+
+Each task stack is filled with a known pattern and has an additional 8-byte guard below its usable space. `minimumFree` records the smallest observed unused space in bytes; lower values mean more stack was used. The saved stack pointer is checked during switching, and `taskStackInfo()` scans the fill pattern when requested. `overflowed` remains true once guard damage or a below-stack saved pointer is observed.
+
+```cpp
+TaskStackInfo stack;
+if (taskStackInfo(taskId, stack)) {
+  Serial.println(stack.minimumFree);
+  if (stack.overflowed) {
+    // report failure; investigate the task's stack size before continuing
+  }
+}
+```
+
+The function returns `false` for invalid/ended tasks and for the main loop, whose existing stack is not owned by the library. It leaves the output unchanged on failure. Diagnostics are estimates, not memory protection: an overflow may already have corrupted memory, and writes matching the fill pattern can be missed. Queries scan with interrupts disabled, so use them sparingly. Metadata adds one pointer, two unsigned values, and a 32-bit deadline per task, plus the guard allocation; there are no additional heap allocations for these features.
+
 ## SyncVar<>
-When two tasks access a global(shared) variable, access needs to be synchronized, meaning a task cannot be interrupted when modifying or reading the global variable value. To simplify writing code that accesses global variables use `SyncVar<>` class that wraps all operations in `noInterrupts()`/`interrupts()`.
+When tasks access a shared variable, synchronize reads and writes. `SyncVar<>` wraps reads, updates, and copies in an interrupt guard that restores the previous interrupt state. Default construction value-initializes the contained value, including local variables. Separate operations are not a single atomic transaction; use `compareAndSet()` for a conditional update. Its overloaded logical operators evaluate both operands, unlike built-in short-circuiting `&&` and `||`.
 ```
 // synchronized counter
 SyncVar<int> _counter;
@@ -217,7 +265,7 @@ template<typename T>
 struct ListNode {
   SyncVar<T> _value;
   SyncVar<ListNode*> _next;
-}
+};
 ```
 You can use `SyncVar<>` in many synchronization scenarios including Compare-and-Set where you want to compare the SyncVar variable with a value and if they are equal set SyncVar variable to another value. This way both the comparison and setting the value are performed as one uninterrupted operation.
 ```
@@ -228,6 +276,32 @@ if (_syncVar.compareAndSet(false, true)) {
   _syncVar = false; // set back to false
 }
 ```
+
+## Allocation constraints
+
+For a fixed set of independent activities, create the long-lived tasks once during `setup()` and pass the expected task count to `setupTasks()`. Their allocations remain in place until they finish or are stopped; scheduling, sleeping, and stack queries do not allocate memory.
+
+Library-owned task allocations, reference counts, and cleanup run with interrupts disabled. This does not make arbitrary application calls to `malloc`, `new`, or allocating `String` operations safe under preemption. Synchronize those operations across all tasks, keep argument constructors/destructors non-blocking, and avoid yielding while manipulating the heap.
+
+With avr-libc's default heap configuration, heap growth is limited by the current stack pointer. A task stack lives inside the heap, so an allocation from that task may fail even when RAM remains available above the heap. Reusable free blocks may still satisfy it. `runTask()` reports its own allocation failures as `-1`; it cannot recover failures inside arbitrary user constructors. This library does not automatically change `__malloc_heap_end` or reserve the main stack. Configuring a fixed AVR heap boundary requires a deliberate memory budget before allocations begin.
+
+Timer0 is shared with Arduino timing/PWM on AVR. The library leaves the default Fast PWM mode intact; `OCR0A = 249` changes the compare phase, not the timer's overflow period.
+
+## Tests
+
+Run from the repository root in PowerShell:
+
+```powershell
+.\tests\run-native.ps1 -Sanitize
+.\tests\run-target.ps1 -Examples
+.\tests\run-target.ps1 -Simulate
+```
+
+The native suite compiles the actual scheduler and templates with a small Arduino/architecture shim, injected allocation failures, poisoned allocations, and optional MSVC AddressSanitizer. It uses only C++11 features; MSVC's earliest selectable language mode is `/std:c++14`.
+
+Target tests require Arduino CLI with the `arduino:avr` and `arduino:samd` cores. They compile for Uno, Mega, and Zero; `-Examples` also compiles all examples for Uno and Zero. `-Simulate` runs the Uno and Mega firmware in Wokwi, checking serial assertions with a timeout. Configure `WOKWI_CLI_TOKEN` in the process environment, never in source control. SAMD21 runtime behavior still needs a supported simulator or board; a successful cross-build is not a runtime test.
+
+GitHub Actions runs native sanitizer tests and AVR/SAMD compilation on pushes and pull requests. For optional Uno/Mega runtime checks, add a repository secret named `WOKWI_CLI_TOKEN`, then manually run the Tests workflow with `simulate` enabled. No simulator token is needed for the default checks.
 
 ## Contact
 If you need assistance using the library please open an [issue](https://github.com/glutio/Taskfun/issues) on GitHub.
