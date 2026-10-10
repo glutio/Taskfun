@@ -4,7 +4,7 @@
 SyncVar<bool> _on;
 
 // task to turn the LED on
-void On(int) {
+void On() {
   while (1) {
     if (_on) {
       digitalWrite(LED_BUILTIN, HIGH);
@@ -15,7 +15,7 @@ void On(int) {
 }
 
 // task to turn the LED off
-void Off(int) {
+void Off() {
   while (1) {
     if (!_on) {
       digitalWrite(LED_BUILTIN, LOW);
@@ -29,8 +29,8 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   setupTasks();
   noInterrupts();
-  runTask(On, 0 /* unused argument */);
-  runTask(Off, 0);
+  runTask(On);
+  runTask(Off);
   interrupts();
 }
 

@@ -116,7 +116,7 @@ void processMessage(String& message) {
 }
 
 // produce constant tone to mix with the morse code
-void produceTone(int) {
+void produceTone() {
   while(1) {
     digitalWrite(_buzzerPin, HIGH);
     delay(1);
@@ -133,7 +133,7 @@ void setup() {
   }
   pinMode(_buzzerPin, OUTPUT);
   setupTasks(20);
-  runTask(produceTone, 0, 64);
+  runTask(produceTone, 64);
 }
 
 void loop() {  
