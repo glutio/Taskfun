@@ -317,7 +317,7 @@ Run from the repository root in PowerShell:
 
 The native suite compiles the actual scheduler and templates with a small Arduino/architecture shim, injected allocation failures, poisoned allocations, and optional MSVC AddressSanitizer. It uses only C++11 features; MSVC's earliest selectable language mode is `/std:c++14`.
 
-Target tests require Arduino CLI with the `arduino:avr` and `arduino:samd` cores. They compile for Uno, Mega, and Zero; `-Examples` also compiles all examples for Uno and Zero. `-Simulate` runs the Uno and Mega firmware in Wokwi, checking serial assertions with a timeout. Configure `WOKWI_CLI_TOKEN` in the process environment, never in source control. SAMD21 runtime behavior still needs a supported simulator or board; a successful cross-build is not a runtime test.
+The tests need the [Buratino](https://github.com/glutio/Buratino) library: a checkout next to this repository, in the Arduino libraries folder, or at `BURATINO_DIR`. Target tests require Arduino CLI with the `arduino:avr` and `arduino:samd` cores. They compile for Uno, Mega, and Zero; `-Examples` also compiles all examples for Uno and Zero. `-Simulate` runs the Uno and Mega firmware in Wokwi, checking serial assertions with a timeout. Configure `WOKWI_CLI_TOKEN` in the process environment, never in source control. SAMD21 runtime behavior still needs a supported simulator or board; a successful cross-build is not a runtime test.
 
 GitHub Actions runs native sanitizer tests and AVR/SAMD compilation on pushes and pull requests. For optional Uno/Mega runtime checks, add a repository secret named `WOKWI_CLI_TOKEN`, then manually run the Tests workflow with `simulate` enabled. No simulator token is needed for the default checks.
 

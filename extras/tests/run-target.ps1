@@ -8,6 +8,8 @@ $process = [Diagnostics.Process]::GetCurrentProcess()
 $process.PriorityClass = 'BelowNormal'
 $affinity = $process.ProcessorAffinity.ToInt64() -band 3
 if ($affinity) { $process.ProcessorAffinity = [IntPtr]$affinity }
+. "$PSScriptRoot\buratino.ps1"
+$buratino = Find-Buratino $root
 $sketch = Join-Path $PSScriptRoot 'target\TaskfunRegression'
 $boards = @(
   @{ Name = 'uno'; Fqbn = 'arduino:avr:uno' },
@@ -16,14 +18,14 @@ $boards = @(
 )
 foreach ($board in $boards) {
   $output = Join-Path $root "build\target\$($board.Name)"
-  & $arduino compile --fqbn $board.Fqbn --jobs 1 --warnings all --library $root --build-path $output $sketch
+  & $arduino compile --fqbn $board.Fqbn --jobs 1 --warnings all --library $root --library $buratino --build-path $output $sketch
   if ($LASTEXITCODE) { throw "$($board.Name) regression firmware build failed." }
 }
 if ($Examples) {
   foreach ($board in @($boards[0], $boards[2])) {
     foreach ($example in Get-ChildItem (Join-Path $root 'examples') -Directory) {
       $output = Join-Path $root "build\examples\$($board.Name)\$($example.Name)"
-      & $arduino compile --fqbn $board.Fqbn --jobs 1 --library $root --build-path $output $example.FullName
+      & $arduino compile --fqbn $board.Fqbn --jobs 1 --library $root --library $buratino --build-path $output $example.FullName
       if ($LASTEXITCODE) { throw "$($board.Name) $($example.Name) example build failed." }
     }
   }

@@ -1,7 +1,7 @@
 #ifndef __BTASK_H__
 #define __BTASK_H__
 
-#include "BPtr.h"
+#include <Buratino.h>
 
 namespace Buratino {
 
