@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - name: Native C++ tests with AddressSanitizer
         shell: pwsh
-        run: .\tests\run-native.ps1 -Sanitize
+        run: .\extras\tests\run-native.ps1 -Sanitize
 
   firmware:
     runs-on: windows-latest
@@ -40,7 +40,7 @@ jobs:
           if ($LASTEXITCODE) { throw 'Arduino core installation failed.' }
       - name: Compile regressions and examples
         shell: pwsh
-        run: .\tests\run-target.ps1 -Examples
+        run: .\extras\tests\run-target.ps1 -Examples
       - name: Wokwi runtime regressions
         if: github.event_name == 'workflow_dispatch' && inputs.simulate
         shell: pwsh
@@ -52,4 +52,4 @@ jobs:
           New-Item -ItemType Directory -Path $bin -Force | Out-Null
           Invoke-WebRequest 'https://github.com/wokwi/wokwi-cli/releases/download/v0.28.1/wokwi-cli-win-x64.exe' -OutFile (Join-Path $bin 'wokwi-cli.exe')
           $env:PATH = "$bin;$env:PATH"
-          .\tests\run-target.ps1 -Simulate
+          .\extras\tests\run-target.ps1 -Simulate

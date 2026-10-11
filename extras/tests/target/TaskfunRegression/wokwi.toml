@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = "../../../../build/target/uno/TaskfunRegression.ino.hex"
+elf = "../../../../build/target/uno/TaskfunRegression.ino.elf"

@@ -310,9 +310,9 @@ Timer0 is shared with Arduino timing/PWM on AVR. The library leaves the default 
 Run from the repository root in PowerShell:
 
 ```powershell
-.\tests\run-native.ps1 -Sanitize
-.\tests\run-target.ps1 -Examples
-.\tests\run-target.ps1 -Simulate
+.\extras\tests\run-native.ps1 -Sanitize
+.\extras\tests\run-target.ps1 -Examples
+.\extras\tests\run-target.ps1 -Simulate
 ```
 
 The native suite compiles the actual scheduler and templates with a small Arduino/architecture shim, injected allocation failures, poisoned allocations, and optional MSVC AddressSanitizer. It uses only C++11 features; MSVC's earliest selectable language mode is `/std:c++14`.

@@ -1,6 +1,6 @@
 param([switch]$Simulate, [switch]$Examples)
 $ErrorActionPreference = 'Stop'
-$root = Split-Path $PSScriptRoot
+$root = Split-Path (Split-Path $PSScriptRoot)
 $cli = Get-Command arduino-cli -ErrorAction SilentlyContinue
 $arduino = if ($cli) { $cli.Source } else { "$env:LOCALAPPDATA\TaskfunTools\bin\arduino-cli.exe" }
 if (-not (Test-Path $arduino)) { throw 'Arduino CLI is required.' }
